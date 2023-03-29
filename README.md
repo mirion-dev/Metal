@@ -1,9 +1,17 @@
-# Useful-Mathematica-Functions
 ## 使用方法
 
-点击`Code`-`Download ZIP`下载源代码文件压缩包，解压，将`Mirion`文件夹移动至你想要的位置
+### 包
 
-1. 通过`<<"<Mirion文件夹位置>"`来导入包，此方法每次打开Mathematica都需要重复一遍
-2. 放入`C:\Users\<用户名>\AppData\Roaming\Mathematica\Autoload`文件夹使其自动加载，此方法只需要执行一遍
+1. 点击`Code`-`Download ZIP`下载源代码文件压缩包
+2. 解压
+3. 将文件移动至`%APPDATA%\Mathematica\Autoload\Mirion`
+4. 重启Mathematica
+5. Enjoy!
 
-`Mirion`文件夹以外的其它文件是独立的，只需下载并用Mathematica打开即可
+### 独立函数
+
+`.nb`文件是独立的，直接使用Mathematica打开即可
+
+- `dev.nb` - 包的开发文档
+- `P Symbol.nb` - P记号相关函数
+- `PlotContour.nb` - 围道绘制函数
