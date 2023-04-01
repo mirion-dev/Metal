@@ -202,10 +202,12 @@ CorrectionTest[org_, res_, {x_, xmin_, xmax_}, OptionsPattern[]] :=
 (*FindIdentities*)
 
 
-FindIdentities[(expr1_)?PolynomialQ, (expr2_)?PolynomialQ, x_Symbol] := 
-   Module[{roots, limit}, roots = x /. Solve[D[expr1/expr2, x] == 0, x]; If[ !ListQ[roots], Return[{}]]; 
-     DeleteDuplicates[Flatten[Reap[Do[limit = Simplify[Limit[expr1/expr2, x -> i]]; If[limit =!= 0 && Element[limit, Reals], 
-            Sow[Defer[expr1] - limit*expr2 == Factor[expr1 - limit*expr2]]], {i, roots}]][[2]]]]]; 
+ClearAll[FindIdentities]; 
+FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && RationalExpressionQ[expr2, x] := 
+   Module[{p1, p2, roots, limit}, p1 = Numerator[Simplify[expr1]]*Denominator[Simplify[expr2]]; 
+     p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; roots = x /. Solve[D[p1/p2, x] == 0, x]; If[ !ListQ[roots], Return[{}]]; 
+     DeleteDuplicates[Flatten[Reap[Do[limit = Simplify[Limit[p1/p2, x -> i]]; If[limit =!= 0 && Element[limit, Rationals], 
+            Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2]]]]]; 
 
 
 End[];
