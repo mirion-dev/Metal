@@ -238,11 +238,16 @@ Li2Transform[z1_, z2_] /; PossibleZeroQ[z1 + z2] := (1/2)*PolyLog[2, z1^2];
 
 
 (* ::Subsection:: *)
-(*Li2Transform*)
+(*Ti2Transform*)
 
 
-Ti2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
-        {0, 1} && CoefficientList[Numerator[ft], t] === {1}] := Defer[Ti[2, 1/z]] + Sign[z]*(Pi/2)*Log[Abs[z]]; 
+Options[Ti2Transform] := {Defer -> True}; 
+Ti2Transform[z_, "\:5012\:6570", OptionsPattern[]] := Module[{ti2 = If[OptionValue[Defer], Defer, Identity][Ti2]}, 
+    ti2[1/z] + Sign[z]*(Pi/2)*Log[Abs[z]]]; 
+Ti2Transform[z_, a_, "\:5012\:6570", OptionsPattern[]] := Module[{ti2 = If[OptionValue[Defer], Defer, Identity][Ti2]}, 
+    -ti2[1/z, 1/a] + ti2[z] - ti2[a] + ArcTan[a]*Log[Abs[a]] - Sign[a]*(Pi/2)*Log[(z*Sqrt[a^2 + 1])/(z + a)]]; 
+Ti2Transform[z_, a_, "\:4ea4\:6362", OptionsPattern[]] := Module[{ti2 = If[OptionValue[Defer], Defer, Identity][Ti2]}, 
+    ti2[a, z] + ti2[z] - ti2[a] + ArcTan[a]*Log[(a*Sqrt[z^2 + 1])/(z + a)] - ArcTan[z]*Log[(z*Sqrt[a^2 + 1])/(z + a)]]; 
 
 
 End[];
