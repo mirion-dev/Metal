@@ -52,6 +52,14 @@ FindIdentities[expr1,expr2,x] \:7ed9\:51fa\:5173\:4e8e expr1,expr2 \:7684\:6052\
 ";
 
 
+(* ::Subsection:: *)
+(*Beta*)
+
+
+Li2Transform::usage = "Beta";
+Ti2Transform::usage = "Beta";
+
+
 (* ::Section:: *)
 (*Option*)
 
@@ -208,6 +216,33 @@ FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && Rat
      p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; roots = x /. Solve[D[p1/p2, x] == 0, x]; If[ !ListQ[roots], Return[{}]]; 
      DeleteDuplicates[Flatten[Reap[Do[limit = Simplify[Limit[p1/p2, x -> i]]; If[limit =!= 0 && Element[limit, Rationals], 
             Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2]]]]]; 
+
+
+(* ::Subsection:: *)
+(*Li2Transform*)
+
+
+Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; PolynomialQ[ft, t] && CoefficientList[ft, t] === {1, -1}] := 
+   -PolyLog[2, 1 - z] - Log[z]*Log[1 - z] + Pi^2/6; 
+Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
+        {0, 1} && CoefficientList[Numerator[ft], t] === {1}] := -PolyLog[2, 1/z] - Log[-z]*Log[z] + Log[z]^2/2 + Pi^2/3; 
+Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
+        {0, 1} && CoefficientList[Numerator[ft], t] === {-1, 1}] := PolyLog[2, 1 - 1/z] + Log[1 - 1/z]*Log[1/z] - Log[-z]*Log[z] + Log[z]^2/2 + 
+    Pi^2/6; 
+Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
+        {1, -1} && CoefficientList[Numerator[ft], t] === {1}] := PolyLog[2, 1/(1 - z)] + (1/2)*Log[1 - z]^2 - Log[-z]*Log[1 - z] - Pi^2/6; 
+Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
+        {-1, 1} && CoefficientList[Numerator[ft], t] === {0, 1}] := -PolyLog[2, z/(-1 + z)] + (1/2)*Log[1 - z]^2 - Log[1 - z]*Log[-z] - 
+    Log[1/(1 - z)]*Log[z/(-1 + z)]; 
+Li2Transform[z1_, z2_] /; PossibleZeroQ[z1 + z2] := (1/2)*PolyLog[2, z1^2]; 
+
+
+(* ::Subsection:: *)
+(*Li2Transform*)
+
+
+Ti2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
+        {0, 1} && CoefficientList[Numerator[ft], t] === {1}] := Defer[Ti[2, 1/z]] + Sign[z]*(Pi/2)*Log[Abs[z]]; 
 
 
 End[];
