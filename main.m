@@ -52,6 +52,11 @@ FindIdentities[expr1,expr2,x] \:7ed9\:51fa\:5173\:4e8e expr1,expr2 \:7684\:6052\
 ";
 
 
+BivariablePlot::usage = "\
+BivariablePlot[list,x] \:7ed8\:5236\:591a\:5143 list \:7684\:5173\:7cfb\:56fe.
+";
+
+
 (* ::Subsection:: *)
 (*Beta*)
 
@@ -248,6 +253,26 @@ Ti2Transform[z_, a_, "\:5012\:6570", OptionsPattern[]] := Module[{ti2 = If[Optio
     -ti2[1/z, 1/a] + ti2[z] - ti2[a] + ArcTan[a]*Log[Abs[a]] - Sign[a]*(Pi/2)*Log[(z*Sqrt[a^2 + 1])/(z + a)]]; 
 Ti2Transform[z_, a_, "\:4ea4\:6362", OptionsPattern[]] := Module[{ti2 = If[OptionValue[Defer], Defer, Identity][Ti2]}, 
     ti2[a, z] + ti2[z] - ti2[a] + ArcTan[a]*Log[(a*Sqrt[z^2 + 1])/(z + a)] - ArcTan[z]*Log[(z*Sqrt[a^2 + 1])/(z + a)]]; 
+
+
+(* ::Subsection:: *)
+(*BivariablePlot*)
+
+
+Options[BivariablePlot] := {PlotLabels -> None}; 
+BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid, const, constQ, edges, vertexes, usedVertexes, edgeStylize, 
+     vertexStylize}, labels = OptionValue[PlotLabels]; isValid = labels =!= None && Length[list] === Length[labels]; 
+     constQ[value_] := FreeQ[value, x] &&  !PossibleZeroQ[value]; edgeStylize[edge_, value_] := 
+      Labeled[edge, Placed[Style[value, 14, FontFamily -> "CMU Serif"], 0.5]]; vertexStylize[value_] := 
+      Framed[Style[value, Black, 14, FontFamily -> "CMU Serif"], FrameStyle -> None]; 
+     edges = Table[Piecewise[{{{UndirectedEdge[bivars[[1]], bivars[[2]]], const}, 
+          constQ[const = Simplify[list[[bivars[[1]]]]^2 + list[[bivars[[2]]]]^2]]}, 
+         {Piecewise[{{{DirectedEdge[bivars[[2]], bivars[[1]]], -const}, TrueQ[const < 0]}, {{DirectedEdge[bivars[[1]], bivars[[2]]], const}, 
+             True}}], constQ[const = Simplify[list[[bivars[[1]]]]^2 - list[[bivars[[2]]]]^2]]}, {Nothing, True}}], 
+       {bivars, Subsets[Range[Length[list]], {2}]}]; usedVertexes = DeleteDuplicates[Cases[edges[[All,1]], _Integer, {2}]]; 
+     vertexes = Table[i -> (Evaluate[Inset[vertexStylize[Piecewise[{{labels[[i]] == list[[i]], isValid}, {list[[i]], True}}]], #1]] & ), 
+       {i, usedVertexes}]; edges = edgeStylize @@@ edges; Graph[edges, PlotTheme -> "DiagramBlack", VertexLabels -> None, 
+      VertexShapeFunction -> vertexes, PlotRangePadding -> Scaled[0.1]]]; 
 
 
 End[];

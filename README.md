@@ -12,10 +12,10 @@
 
 `.nb` 后缀是笔记本文件，使用Mathematica打开
 
-- `dev.nb` - 包的开发文档
+- `dev.nb` - 开发用
+- `style.nb` - 样式表，和 `normalize.m` 搭配使用
 - `P Symbol.nb` - P记号相关函数
-- `PlotContour.nb` - 围道绘制函数
 
 `.m` 后缀是包文件，Mathematica中使用 `<<` 导入
 
-- `normalize.m` - 常规化TraditionalForm下的记号
+- `normalize.m` - 常规化TraditionalForm下的记号，和 `style.nb` 搭配使用
