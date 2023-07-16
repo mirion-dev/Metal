@@ -12,6 +12,15 @@ ClearAll["`*"];
 (*Function*)
 
 
+ExpressionPivot::usage = "\
+ExpressionPivot[expr] \:8fd4\:56de\:8868\:8fbe\:5f0f expr \:7684\:4e3b\:5143, \:627e\:4e0d\:5230\:5219\:8fd4\:56de Missing[] .
+ExpressionPivot[expr,default] \:8fd4\:56de\:8868\:8fbe\:5f0f expr \:7684\:4e3b\:5143, \:627e\:4e0d\:5230\:5219\:8fd4\:56de default .";  
+
+
+CoefficientSeparation::usage = "\
+CoefficientSeparation[expr,x] \:8fd4\:56de\:5173\:4e8e x \:7684\:8868\:8fbe\:5f0f expr \:7684\:7cfb\:6570\:548c\:5269\:4f59\:90e8\:5206\:7ec4\:6210\:7684\:5217\:8868.";  
+
+
 IBP::usage = "\
 IBP[u,x] \:7ed9\:51fa \[Integral]u \[DifferentialD]x \:7684\:5206\:90e8\:79ef\:5206.
 IBP[u,v,x] \:7ed9\:51fa \[Integral]u \[DifferentialD]v \:7684\:5206\:90e8\:79ef\:5206.
@@ -20,9 +29,11 @@ IBP[u,v,{x,a,b}] \:7ed9\:51fa \!\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(
 
 
 IBS::usage = "\
+IBS[f,ex\[Rule]et] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:5173\:4e8e ex\[Rule]et \:7684\:79ef\:5206\:6362\:5143.
 IBS[f,x\[Rule]et,t] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:5173\:4e8e x\[Rule]et \:7684\:79ef\:5206\:6362\:5143.
 IBS[f,ex\[Rule]t,x] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:5173\:4e8e ex\[Rule]t \:7684\:79ef\:5206\:6362\:5143.
 IBS[f,ex\[Rule]et,x,t] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:5173\:4e8e ex\[Rule]et \:7684\:79ef\:5206\:6362\:5143.
+IBS[f,{a,b},ex\[Rule]et] \:7ed9\:51fa \!\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]\)f \[DifferentialD]x \:5173\:4e8e ex\[Rule]et \:7684\:79ef\:5206\:6362\:5143.
 IBS[f,{a,b},x\[Rule]et,t] \:7ed9\:51fa \!\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]\)f \[DifferentialD]x \:5173\:4e8e x\[Rule]et \:7684\:79ef\:5206\:6362\:5143.
 IBS[f,{a,b},ex\[Rule]t,x] \:7ed9\:51fa \!\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]\)f \[DifferentialD]x \:5173\:4e8e ex\[Rule]t \:7684\:79ef\:5206\:6362\:5143.
 IBS[f,{a,b},ex\[Rule]et,x,t] \:7ed9\:51fa \!\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]\)f \[DifferentialD]x \:5173\:4e8e ex\[Rule]et \:7684\:79ef\:5206\:6362\:5143.";
@@ -57,12 +68,10 @@ BivariablePlot[list,x] \:7ed8\:5236\:591a\:5143 list \:7684\:5173\:7cfb\:56fe.
 ";
 
 
-(* ::Subsection:: *)
-(*Beta*)
+Li2Transform::usage = "";
 
 
-Li2Transform::usage = "Beta";
-Ti2Transform::usage = "Beta";
+Ti2Transform::usage = "";
 
 
 (* ::Section:: *)
