@@ -87,28 +87,12 @@ ClearAll["`*"];
 
 
 (* ::Subsection:: *)
-(*CheckVersion*)
+(*ArcTanLimit*)
 
 
-CheckVersion::vtl = "Mathematica \:7248\:672c\:8fc7\:4f4e. \:5f53\:524d\:7684\:7248\:672c\:4e3a ``, \:8981\:6c42\:7684\:7248\:672c\:4e3a ``."; 
-CheckVersion[(v_)?NumericQ] := If[TrueQ[$VersionNumber < v], Message[CheckVersion::vtl, $VersionNumber, v]]; 
-
-
-(* ::Subsection:: *)
-(*ExpressionPivot*)
-
-
-Attributes[ExpressionPivot] := {Listable}; 
-ExpressionPivot[expr_] := FirstCase[expr, _Symbol, False, {0, Infinity}]; 
-
-
-(* ::Subsection:: *)
-(*CoefficientSeparation*)
-
-
-Attributes[CoefficientSeparation] := {Listable}; 
-CoefficientSeparation[expr_, x_Symbol] := Module[{coef}, If[FreeQ[expr, x], Return[{expr, 1}]]; 
-     Simplify[({#1, expr/#1} & )[Replace[(c_.)*_ /; FreeQ[c, x] -> c][Simplify[expr]]]]]; 
+Attributes[ArcTanLimit] = {Listable}; 
+ArcTanLimit[expr_, x_] := Module[{nd, en, ed, r}, nd = NumeratorDenominator[Together[expr]]; {en, ed} = Exponent[nd, x]; 
+     r = Divide @@ Coefficient[nd, x, {en, ed}]; Piecewise[{{Sign[r]*(Pi/2), en > ed}, {0, en < ed}, {ArcTan[r], True}}]]; 
 
 
 (* ::Section:: *)
@@ -116,71 +100,86 @@ CoefficientSeparation[expr_, x_Symbol] := Module[{coef}, If[FreeQ[expr, x], Retu
 
 
 (* ::Subsection:: *)
+(*ExpressionPivot*)
+
+
+Attributes[ExpressionPivot] = {Listable}; 
+ExpressionPivot[expr_, default_:Missing[]] := FirstCase[expr, _Symbol?(Not @* NumericQ), default, {-1}]; 
+
+
+(* ::Subsection:: *)
+(*CoefficientSeparation*)
+
+
+Attributes[CoefficientSeparation] = {Listable}; 
+CoefficientSeparation[expr_, x_Symbol] := If[FreeQ[expr, x], {expr, 1}, Replace[expr, Longest[c_.]*(r_) /; FreeQ[c, x] -> {c, r}]]; 
+
+
+(* ::Subsection:: *)
 (*IBP*)
 
 
-IBP[u_, v_, x_Symbol] := Module[{coef, rem}, {coef, rem} = CoefficientSeparation[v*D[u, x], x]; 
-     Simplify[u*v - coef*Inactive[Integrate][rem, x]]]; 
+IBP[u_, v_, x_Symbol] := Module[{coef, rem}, {coef, rem} = CoefficientSeparation[v*D[u, x], x]; u*v - coef*Inactive[Integrate][rem, x]]; 
 IBP[f_, x_Symbol] := IBP[f, x, x]; 
-IBP[u_, v_, {x_Symbol, a_, b_}] := Module[{coef, rem}, {coef, rem} = CoefficientSeparation[v*D[u, x], x]; 
-     Simplify[Limit[u*v, x -> b] - Limit[u*v, x -> a] - coef*Inactive[Integrate][rem, {x, a, b}]]]; 
-IBP[f_, {x_Symbol, a_, b_}] := IBP[f, x, {x, a, b}]; 
+IBP[u_, v_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := Module[{coef, rem}, {coef, rem} = CoefficientSeparation[v*D[u, x], x]; 
+     Limit[u*v, x -> b, opts] - Limit[u*v, x -> a, opts] - coef*Inactive[Integrate][rem, {x, a, b}]]; 
+IBP[f_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := IBP[f, x, {x, a, b}, opts]; 
 
 
 (* ::Subsection:: *)
 (*IBS*)
 
 
-Options[IBS] := {Assumptions -> $Assumptions}; 
-IBS[f_, ex_ -> et_, x_Symbol, t_Symbol, OptionsPattern[]] /; x =!= t && FreeQ[ex, t] && FreeQ[et, x] := 
-   Module[{assum = OptionValue[Assumptions], u}, CheckVersion[13.1]; 
-     Simplify[If[ex === x, f /. x -> et, IntegrateChangeVariables[Inactive[Integrate][f, x], u, u == ex, Assumptions -> assum][[1]] /. u -> et]*
-        D[et, t] /. C[_] -> 0, assum]]; 
-IBS[f_, x_Symbol -> et_, t_Symbol, opts:OptionsPattern[]] /; x =!= t && FreeQ[et, x] := IBS[f, x -> et, x, t, opts]; 
-IBS[f_, ex_ -> t_Symbol, x_Symbol, opts:OptionsPattern[]] /; x =!= t && FreeQ[ex, t] := IBS[f, ex -> t, x, t, opts]; 
-IBS[f_, {a_, b_}, ex_ -> et_, x_Symbol, t_Symbol, OptionsPattern[]] /; x =!= t && FreeQ[ex, t] && FreeQ[et, x] := 
-   Module[{assum = OptionValue[Assumptions], u, temp}, CheckVersion[13.1]; temp = If[ex === x, Inactive[Integrate][f, {x, a, b}] /. x -> u, 
-       IntegrateChangeVariables[Inactive[Integrate][f, {x, a, b}], u, u == ex, Assumptions -> assum]]; 
-     Simplify[If[et === t, temp /. u -> t, IntegrateChangeVariables[temp, t, u == et, Assumptions -> assum]], assum]]; 
-IBS[f_, {a_, b_}, x_Symbol -> et_, t_Symbol, opts:OptionsPattern[]] /; x =!= t && FreeQ[et, x] := IBS[f, {a, b}, x -> et, x, t, opts]; 
-IBS[f_, {a_, b_}, ex_ -> t_Symbol, x_Symbol, opts:OptionsPattern[]] /; x =!= t && FreeQ[ex, t] := IBS[f, {a, b}, ex -> t, x, t, opts]; 
+IBS[f_, ex_ -> et_, x_Symbol, t_Symbol, opts:OptionsPattern[]] /; FreeQ[ex, t] &&  !FreeQ[ex, x] && FreeQ[et, x] &&  !FreeQ[et, t] := 
+   Module[{u}, If[ex === x, f /. x -> et, IntegrateChangeVariables[Inactive[Integrate][f, x], u, u == ex, opts][[1]] /. u -> et]*D[et, t] /. 
+     C[_] -> 0]; 
+IBS[f_, x_Symbol -> et_, t_Symbol, opts:OptionsPattern[]] := IBS[f, x -> et, x, t, opts]; 
+IBS[f_, ex_ -> t_Symbol, x_Symbol, opts:OptionsPattern[]] := IBS[f, ex -> t, x, t, opts]; 
+IBS[f_, ex_ -> et_, opts:OptionsPattern[]] := IBS[f, ex -> et, ExpressionPivot[ex], ExpressionPivot[et], opts]; 
+IBS[f_, {a_, b_}, ex_ -> et_, x_Symbol, t_Symbol, opts:OptionsPattern[]] /; FreeQ[ex, t] &&  !FreeQ[ex, x] && FreeQ[et, x] &&  !FreeQ[et, t] := 
+   Module[{u, temp}, temp = If[ex === x, Inactive[Integrate][f, {x, a, b}] /. x -> u, IntegrateChangeVariables[
+        Inactive[Integrate][f, {x, a, b}], u, u == ex, opts]]; If[et === t, temp /. u -> t, IntegrateChangeVariables[temp, t, u == et, opts]]]; 
+IBS[f_, {a_, b_}, x_Symbol -> et_, t_Symbol, opts:OptionsPattern[]] := IBS[f, {a, b}, x -> et, x, t, opts]; 
+IBS[f_, {a_, b_}, ex_ -> t_Symbol, x_Symbol, opts:OptionsPattern[]] := IBS[f, {a, b}, ex -> t, x, t, opts]; 
+IBS[f_, {a_, b_}, ex_ -> et_, opts:OptionsPattern[]] := IBS[f, {a, b}, ex -> et, ExpressionPivot[ex], ExpressionPivot[et], opts]; 
 
 
 (* ::Subsection:: *)
 (*ApartArcTan*)
 
 
-Attributes[ApartArcTan] := {Listable}; 
-Options[ApartArcTan] := {GenerateConstant -> False, SimplifyFunction -> Simplify}; 
-ApartArcTan[expr_, x_Symbol, OptionsPattern[]] /; RationalExpressionQ[expr, x] := 
-   Module[{simp = OptionValue[SimplifyFunction], gene = OptionValue[GenerateConstant], roots, result, zeros, offset}, 
-    roots = x /. Solve[expr == I, x]; result = Sum[ArcTan[simp[(x - Re[r])/Im[r]]], {r, roots}]; If[ !gene, Return[result]]; 
-     zeros = x /. DeleteDuplicates[Solve[Denominator[Together[expr]] == 0, x]]; 
-     result += If[Length[zeros] === 0, ArcTan[expr] - result /. x -> 0, 
-       offset = Append[Table[Limit[ArcTan[expr], x -> i, Direction -> "FromBelow"] - (result /. x -> i), {i, zeros}], 
-          Limit[ArcTan[expr], x -> Last[zeros], Direction -> "FromAbove"] - (result /. x -> Last[zeros])]; 
-        Piecewise[Append[Prepend[Table[{offset[[i + 1]], zeros[[i]] < x < zeros[[i + 1]]}, {i, Length[zeros] - 1}], 
-           {First[offset], x < First[zeros]}], {Last[offset], x > Last[zeros]}]]]; Simplify[result]]; 
-ApartArcTan[expr_, opts:OptionsPattern[]] := ApartArcTan[expr, ExpressionPivot[expr], opts]; 
+Attributes[ApartArcTan] = {Listable}; 
+Options[ApartArcTan] = {GenerateConstant -> True, SimplifyFunction -> ToRadicals /* ComplexExpand /* FunctionExpand /* Simplify}; 
+ApartArcTan[expr_, x_Symbol, OptionsPattern[]] /; RationalExpressionQ[expr, x] := Module[{result, count = 0, poles, sample, c = {}}, 
+    result = Sum[ArcTan[OptionValue[SimplifyFunction][(x - Re[r])/((count += Sign[#1]; #1) & )[Im[r]]]], {r, SolveValues[expr == I, x]}]; 
+     If[OptionValue[GenerateConstant], result += ArcTanLimit[expr, x] - count*(Pi/2); 
+       poles = DeleteDuplicates[SolveValues[Denominator[Together[expr]] == 0, x, Reals]]; If[Length[poles] =!= 0, 
+        sample = (((1/2)*Table[#1[[i]] + #1[[i + 1]], {i, Length[#1] - 1}] & )[Prepend[#1, First[#1] - 1]] & )[N[poles]]; 
+         c = Pi*Round[(1/Pi)*Table[ArcTan[expr] - result /. x -> i, {i, sample}]]; 
+         result += Piecewise[Prepend[Table[{c[[i + 1]], poles[[i]] < x < poles[[i + 1]]}, {i, Length[poles] - 1}], 
+            {First[c], x < First[poles]}]]]; ]; result]; 
+ApartArcTan[expr_, opts:OptionsPattern[]] := ApartArcTan[expr, ExpressionPivot[expr, Symbol], opts]; 
 
 
 (* ::Subsection:: *)
 (*RealFactor*)
 
 
-Attributes[RealFactor] := {Listable}; 
-Options[RealFactor] := {SimplifyFunction -> RootReduce /* ToRadicals /* Simplify}; 
-RealFactor[poly_, x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] := Module[{simp = OptionValue[SimplifyFunction], roots, result = 1}, 
-    If[FreeQ[poly, x], Return[poly]]; roots = DeleteDuplicates[x /. Solve[poly == 0, x], N[Conjugate[#1] == #2] & ]; 
-     Coefficient[poly, x, Exponent[poly, x]]*
-      Times @@ Table[simp[Piecewise[{{x - root, Element[root, Reals]}, {(x - Re[root])^2 + Im[root]^2, True}}]], {root, roots}]]; 
-RealFactor[poly_, opts:OptionsPattern[]] := RealFactor[poly, ExpressionPivot[poly], opts]; 
+Attributes[RealFactor] = {Listable}; 
+Options[RealFactor] = {SimplifyFunction -> ToRadicals /* ComplexExpand /* FunctionExpand /* Simplify}; 
+RealFactor[poly_, x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] := 
+   Module[{roots, fcoef}, If[FreeQ[poly, x], Return[poly]]; fcoef = Coefficient[poly, x, Exponent[poly, x]]; 
+     roots = DeleteDuplicates[SolveValues[poly == 0, x], N[Conjugate[#1] == #2] & ]; 
+     fcoef*Times @@ Table[OptionValue[SimplifyFunction][Piecewise[{{x - r, Element[r, Reals]}, {(x - Re[r])^2 + Im[r]^2, True}}]], 
+        {r, roots}]]; 
+RealFactor[poly_, opts:OptionsPattern[]] := RealFactor[poly, ExpressionPivot[poly, Symbol], opts]; 
 
 
 Attributes[RealApart] := {Listable}; 
 Options[RealApart] := Options[RealFactor]; 
-RealApart[poly_, x_Symbol, opts:OptionsPattern[]] /; RationalExpressionQ[poly, x] := Apart[Numerator[poly]/RealFactor[Denominator[poly], opts]]; 
-RealApart[poly_, opts:OptionsPattern[]] := RealApart[poly, ExpressionPivot[poly], opts]; 
+RealApart[poly_, x_Symbol, opts:OptionsPattern[]] /; RationalExpressionQ[poly, x] := 
+   Apart[Numerator[poly]/RealFactor[Denominator[poly], opts]]; 
+RealApart[poly_, opts:OptionsPattern[]] := RealApart[poly, ExpressionPivot[poly, Symbol], opts]; 
 
 
 (* ::Subsection:: *)
@@ -194,11 +193,11 @@ CorrectionTest[org_, res_, {x_, xmin_, xmax_}, OptionsPattern[]] :=
         Style[False, Bold, RGBColor["#4081ff"]]}, {Style[True, Bold, RGBColor["#eb7100"]], Style[False, Bold, RGBColor["#eb7100"]]}, 
        {Style["\:56fe\:50cf", Bold], SpanFromLeft}, {Null, SpanFromLeft}}, skip = OptionValue[Skip], cons = OptionValue[TimeConstraint], 
      veri = OptionValue[VerifyDiscontinuities], prec = OptionValue[WorkingPrecision], dom = True}, 
-    CheckVersion[12.2]; If[ !ListQ[skip], skip = {skip}]; If[ !ListQ[veri], veri = {veri}]; 
-     If[ !AssociationQ[cons], cons = Association["\:5b9a\:4e49\:57df" -> cons, "\:95f4\:65ad\:70b9" -> cons, "\:56fe\:50cf" -> cons]]; 
-     If[ !MemberQ[skip, "\:5b9a\:4e49\:57df"], TimeConstrained[table[[2,1]] = Item[Style[dom = Reduce[FunctionDomain[org, x], Element[x, Reals]], Bold, 
-            RGBColor["#4081ff"]], ItemSize -> Automatic]; table[[3,1]] = Item[Style[Reduce[FunctionDomain[res, x] && dom, Element[x, Reals]], 
-            Bold, RGBColor["#eb7100"]], ItemSize -> Automatic]; , cons["\:5b9a\:4e49\:57df"], Message[CorrectionTest::overtime, "\:5b9a\:4e49\:57df"]; ]; ]; 
+    If[ !ListQ[skip], skip = {skip}]; If[ !ListQ[veri], veri = {veri}]; If[ !AssociationQ[cons], 
+      cons = Association["\:5b9a\:4e49\:57df" -> cons, "\:95f4\:65ad\:70b9" -> cons, "\:56fe\:50cf" -> cons]]; If[ !MemberQ[skip, "\:5b9a\:4e49\:57df"], 
+      TimeConstrained[table[[2,1]] = Item[Style[dom = Reduce[FunctionDomain[org, x], Element[x, Reals]], Bold, RGBColor["#4081ff"]], 
+           ItemSize -> Automatic]; table[[3,1]] = Item[Style[Reduce[FunctionDomain[res, x] && dom, Element[x, Reals]], Bold, 
+            RGBColor["#eb7100"]], ItemSize -> Automatic]; , cons["\:5b9a\:4e49\:57df"], Message[CorrectionTest::overtime, "\:5b9a\:4e49\:57df"]; ]; ]; 
      If[ !MemberQ[skip, "\:95f4\:65ad\:70b9"], 
       TimeConstrained[table[[2,2]] = Item[Style[Reduce[FunctionDiscontinuities[org, x] && dom, Element[x, Reals]], Bold, RGBColor["#4081ff"]], 
            ItemSize -> Automatic]; table[[3,2]] = Item[Style[Reduce[FunctionDiscontinuities[res, x] && dom, Element[x, Reals]], Bold, 
@@ -215,12 +214,35 @@ CorrectionTest[org_, res_, {x_, xmin_, xmax_}, OptionsPattern[]] :=
 (*FindIdentities*)
 
 
-ClearAll[FindIdentities]; 
 FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && RationalExpressionQ[expr2, x] := 
    Module[{p1, p2, roots, limit}, p1 = Numerator[Simplify[expr1]]*Denominator[Simplify[expr2]]; 
-     p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; roots = x /. Solve[D[p1/p2, x] == 0, x]; If[ !ListQ[roots], Return[{}]]; 
+     p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; roots = SolveValues[D[p1/p2, x] == 0, x]; If[ !ListQ[roots], Return[{}]]; 
      DeleteDuplicates[Flatten[Reap[Do[limit = Simplify[Limit[p1/p2, x -> i]]; If[limit =!= 0 && Element[limit, Rationals], 
             Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2]]]]]; 
+
+
+(* ::Subsection:: *)
+(*BivariablePlot*)
+
+
+Options[BivariablePlot] := {PlotLabels -> None}; 
+BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid, const, constQ, edges, vertexes, usedVertexes, edgeStylize, 
+     vertexStylize}, labels = OptionValue[PlotLabels]; isValid = labels =!= None && Length[list] === Length[labels]; 
+     constQ[value_] := FreeQ[value, x] &&  !PossibleZeroQ[value]; edgeStylize[edge_, value_] := 
+      Labeled[edge, Placed[Style[value, 14, FontFamily -> "CMU Serif"], 0.5]]; vertexStylize[value_] := 
+      Framed[Style[value, Black, 14, FontFamily -> "CMU Serif"], FrameStyle -> None]; 
+     edges = Table[Piecewise[{{{UndirectedEdge[bivars[[1]], bivars[[2]]], const}, 
+          constQ[const = Simplify[list[[bivars[[1]]]]^2 + list[[bivars[[2]]]]^2]]}, 
+         {Piecewise[{{{DirectedEdge[bivars[[2]], bivars[[1]]], -const}, TrueQ[const < 0]}, {{DirectedEdge[bivars[[1]], bivars[[2]]], const}, 
+             True}}], constQ[const = Simplify[list[[bivars[[1]]]]^2 - list[[bivars[[2]]]]^2]]}, {Nothing, True}}], 
+       {bivars, Subsets[Range[Length[list]], {2}]}]; usedVertexes = DeleteDuplicates[Cases[edges[[All,1]], _Integer, {2}]]; 
+     vertexes = Table[i -> (Evaluate[Inset[vertexStylize[Piecewise[{{labels[[i]] == list[[i]], isValid}, {list[[i]], True}}]], #1]] & ), 
+       {i, usedVertexes}]; edges = edgeStylize @@@ edges; Graph[edges, PlotTheme -> "DiagramBlack", VertexLabels -> None, 
+      VertexShapeFunction -> vertexes, PlotRangePadding -> Scaled[0.1]]]; 
+
+
+(* ::Section:: *)
+(*Experimental*)
 
 
 (* ::Subsection:: *)
@@ -253,26 +275,6 @@ Ti2Transform[z_, a_, "\:5012\:6570", OptionsPattern[]] := Module[{ti2 = If[Optio
     -ti2[1/z, 1/a] + ti2[z] - ti2[a] + ArcTan[a]*Log[Abs[a]] - Sign[a]*(Pi/2)*Log[(z*Sqrt[a^2 + 1])/(z + a)]]; 
 Ti2Transform[z_, a_, "\:4ea4\:6362", OptionsPattern[]] := Module[{ti2 = If[OptionValue[Defer], Defer, Identity][Ti2]}, 
     ti2[a, z] + ti2[z] - ti2[a] + ArcTan[a]*Log[(a*Sqrt[z^2 + 1])/(z + a)] - ArcTan[z]*Log[(z*Sqrt[a^2 + 1])/(z + a)]]; 
-
-
-(* ::Subsection:: *)
-(*BivariablePlot*)
-
-
-Options[BivariablePlot] := {PlotLabels -> None}; 
-BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid, const, constQ, edges, vertexes, usedVertexes, edgeStylize, 
-     vertexStylize}, labels = OptionValue[PlotLabels]; isValid = labels =!= None && Length[list] === Length[labels]; 
-     constQ[value_] := FreeQ[value, x] &&  !PossibleZeroQ[value]; edgeStylize[edge_, value_] := 
-      Labeled[edge, Placed[Style[value, 14, FontFamily -> "CMU Serif"], 0.5]]; vertexStylize[value_] := 
-      Framed[Style[value, Black, 14, FontFamily -> "CMU Serif"], FrameStyle -> None]; 
-     edges = Table[Piecewise[{{{UndirectedEdge[bivars[[1]], bivars[[2]]], const}, 
-          constQ[const = Simplify[list[[bivars[[1]]]]^2 + list[[bivars[[2]]]]^2]]}, 
-         {Piecewise[{{{DirectedEdge[bivars[[2]], bivars[[1]]], -const}, TrueQ[const < 0]}, {{DirectedEdge[bivars[[1]], bivars[[2]]], const}, 
-             True}}], constQ[const = Simplify[list[[bivars[[1]]]]^2 - list[[bivars[[2]]]]^2]]}, {Nothing, True}}], 
-       {bivars, Subsets[Range[Length[list]], {2}]}]; usedVertexes = DeleteDuplicates[Cases[edges[[All,1]], _Integer, {2}]]; 
-     vertexes = Table[i -> (Evaluate[Inset[vertexStylize[Piecewise[{{labels[[i]] == list[[i]], isValid}, {list[[i]], True}}]], #1]] & ), 
-       {i, usedVertexes}]; edges = edgeStylize @@@ edges; Graph[edges, PlotTheme -> "DiagramBlack", VertexLabels -> None, 
-      VertexShapeFunction -> vertexes, PlotRangePadding -> Scaled[0.1]]]; 
 
 
 End[];

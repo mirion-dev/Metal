@@ -1,21 +1,20 @@
 ## 使用方法
 
+0. 点击 `Code` - `Download ZIP` 下载压缩包，解压
+
 ### 包
 
-1. 点击 `Code` - `Download ZIP` 下载源代码文件压缩包
-2. 解压
-3. 将文件移动至 `%APPDATA%\Mathematica\Autoload\Mirion`
-4. 重启Mathematica
-5. Enjoy!
+1. 将文件移动至 `%APPDATA%/Mathematica/Autoload/Mirion`
+2. 重启 Mathematica
 
-### 独立文件
+- `Kernel/init.m` - 作用是导入 `main.m`
+- `main.m` - 本体，里面只有格式化后的代码
+- `dev.nb` - 开发文件，附有注释
 
-`.nb` 后缀是笔记本文件，使用Mathematica打开
+### 样式美化
 
-- `dev.nb` - 开发用
-- `style.nb` - 样式表，和 `normalize.m` 搭配使用
-- `P Symbol.nb` - P记号相关函数
+1. 将 `DefaultStyleDefinitions` 项修改为 `style.nb` 的位置
+2. 执行 `<< Mirion/tf.m`
 
-`.m` 后缀是包文件，Mathematica中使用 `<<` 导入
-
-- `normalize.m` - 常规化TraditionalForm下的记号，和 `style.nb` 搭配使用
+- `style.nb` - 样式表
+- `tf.m` - 传统格式设置脚本
