@@ -55,33 +55,27 @@ RealApart[expr] \:7ed9\:51fa expr \:5728\:5b9e\:6570\:57df\:4e0a\:7684\:88c2\:98
 RealApart[expr,x] \:7ed9\:51fa expr \:5173\:4e8e x \:5728\:5b9e\:6570\:57df\:4e0a\:7684\:88c2\:9879."; 
 
 
-CorrectionTest::usage = "\
-CorrectionTest[org,res,{x,\!\(\*SubscriptBox[\(x\), \(min\)]\),\!\(\*SubscriptBox[\(x\), \(max\)]\)}] \:68c0\:9a8c res \:5173\:4e8e org \:7684\:4fee\:6b63\:662f\:5426\:6b63\:786e."; 
-
-
-BivariablePlot::usage = "\
-BivariablePlot[list,x] \:7ed8\:5236\:591a\:5143 list \:7684\:5173\:7cfb\:56fe.
-";
-
-
 FindIdentities::usage = "\
 FindIdentities[expr1,expr2,x] \:7ed9\:51fa\:5173\:4e8e expr1,expr2 \:7684\:6052\:7b49\:5f0f.
 ";
 
 
-Li2Transform::usage = "";
+CorrectionTest::usage = "\
+CorrectionTest[org,res,{x,\!\(\*SubscriptBox[\(x\), \(min\)]\),\!\(\*SubscriptBox[\(x\), \(max\)]\)}] \:ff08\:5b9e\:9a8c\:6027\:ff09\:68c0\:9a8c res \:5173\:4e8e org \:7684\:4fee\:6b63\:662f\:5426\:6b63\:786e."; 
 
 
-Ti2Transform::usage = "";
+BivariablePlot::usage = "\
+BivariablePlot[list,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed8\:5236\:591a\:5143 list \:7684\:5173\:7cfb\:56fe.
+";
 
 
 (* ::Section:: *)
 (*Option*)
 
 
-GenerateConstant::usage = "GenerateConstant \:5173\:4e8e\:751f\:6210\:5e38\:6570\:7684\:9009\:9879"; 
+GenerateConstant::usage = "GenerateConstant \:5173\:4e8e\:662f\:5426\:751f\:6210\:5e38\:6570\:7684\:9009\:9879"; 
 SimplifyFunction::usage = "SimplifyFunction \:5173\:4e8e\:5316\:7b80\:51fd\:6570\:7684\:9009\:9879"; 
-VerifyDiscontinuities::usage = "VerifyDiscontinuities \:5173\:4e8e\:9a8c\:8bc1\:95f4\:65ad\:70b9\:7684\:9009\:9879"; 
+VerifyDiscontinuities::usage = "VerifyDiscontinuities \:5173\:4e8e\:662f\:5426\:9a8c\:8bc1\:95f4\:65ad\:70b9\:7684\:9009\:9879"; 
 
 
 Begin["`Private`"]; 
@@ -255,6 +249,21 @@ RealApart[expr_, opts:OptionsPattern[]] := RealApart[expr, ExpressionPivot[expr]
 
 
 (* ::Subsection:: *)
+(*FindIdentities*)
+
+
+FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && RationalExpressionQ[expr2, x] := 
+   Module[{p1, p2, roots, limit}, p1 = Numerator[Simplify[expr1]]*Denominator[Simplify[expr2]]; 
+     p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; roots = DeleteDuplicates[SolveValues[D[p1, x]*p2 == D[p2, x]*p1, x]]; 
+     DeleteDuplicates[Flatten[Reap[Do[limit = Simplify[Limit[p1/p2, x -> i]]; If[limit =!= 0 && Element[limit, Rationals], 
+            Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2]]]]]; 
+
+
+(* ::Section:: *)
+(*Experimental*)
+
+
+(* ::Subsection:: *)
 (*CorrectionTest*)
 
 
@@ -300,53 +309,6 @@ BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid
      vertexes = Table[i -> (Evaluate[Inset[vertexStylize[Piecewise[{{labels[[i]] == list[[i]], isValid}, {list[[i]], True}}]], #1]] & ), 
        {i, usedVertexes}]; edges = edgeStylize @@@ edges; Graph[edges, PlotTheme -> "DiagramBlack", VertexLabels -> None, 
       VertexShapeFunction -> vertexes, PlotRangePadding -> Scaled[0.1]]]; 
-
-
-(* ::Subsection:: *)
-(*FindIdentities*)
-
-
-FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && RationalExpressionQ[expr2, x] := 
-   Module[{p1, p2, roots, limit}, p1 = Numerator[Simplify[expr1]]*Denominator[Simplify[expr2]]; 
-     p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; roots = DeleteDuplicates[SolveValues[D[p1, x]*p2 == D[p2, x]*p1, x]]; 
-     DeleteDuplicates[Flatten[Reap[Do[limit = Simplify[Limit[p1/p2, x -> i]]; If[limit =!= 0 && Element[limit, Rationals], 
-            Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2]]]]]; 
-
-
-(* ::Section:: *)
-(*Experimental*)
-
-
-(* ::Subsection:: *)
-(*Li2Transform*)
-
-
-Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; PolynomialQ[ft, t] && CoefficientList[ft, t] === {1, -1}] := 
-   -PolyLog[2, 1 - z] - Log[z]*Log[1 - z] + Pi^2/6; 
-Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
-        {0, 1} && CoefficientList[Numerator[ft], t] === {1}] := -PolyLog[2, 1/z] - Log[-z]*Log[z] + Log[z]^2/2 + Pi^2/3; 
-Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
-        {0, 1} && CoefficientList[Numerator[ft], t] === {-1, 1}] := PolyLog[2, 1 - 1/z] + Log[1 - 1/z]*Log[1/z] - Log[-z]*Log[z] + Log[z]^2/2 + 
-    Pi^2/6; 
-Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
-        {1, -1} && CoefficientList[Numerator[ft], t] === {1}] := PolyLog[2, 1/(1 - z)] + (1/2)*Log[1 - z]^2 - Log[-z]*Log[1 - z] - Pi^2/6; 
-Li2Transform[z_, f_Function] /; Module[{t, ft}, ft = Together[f[t]]; RationalExpressionQ[ft, t] && CoefficientList[Denominator[ft], t] === 
-        {-1, 1} && CoefficientList[Numerator[ft], t] === {0, 1}] := -PolyLog[2, z/(-1 + z)] + (1/2)*Log[1 - z]^2 - Log[1 - z]*Log[-z] - 
-    Log[1/(1 - z)]*Log[z/(-1 + z)]; 
-Li2Transform[z1_, z2_] /; PossibleZeroQ[z1 + z2] := (1/2)*PolyLog[2, z1^2]; 
-
-
-(* ::Subsection:: *)
-(*Ti2Transform*)
-
-
-Options[Ti2Transform] := {Defer -> True}; 
-Ti2Transform[z_, "\:5012\:6570", OptionsPattern[]] := Module[{ti2 = If[OptionValue[Defer], Defer, Identity][Ti2]}, 
-    ti2[1/z] + Sign[z]*(Pi/2)*Log[Abs[z]]]; 
-Ti2Transform[z_, a_, "\:5012\:6570", OptionsPattern[]] := Module[{ti2 = If[OptionValue[Defer], Defer, Identity][Ti2]}, 
-    -ti2[1/z, 1/a] + ti2[z] - ti2[a] + ArcTan[a]*Log[Abs[a]] - Sign[a]*(Pi/2)*Log[(z*Sqrt[a^2 + 1])/(z + a)]]; 
-Ti2Transform[z_, a_, "\:4ea4\:6362", OptionsPattern[]] := Module[{ti2 = If[OptionValue[Defer], Defer, Identity][Ti2]}, 
-    ti2[a, z] + ti2[z] - ti2[a] + ArcTan[a]*Log[(a*Sqrt[z^2 + 1])/(z + a)] - ArcTan[z]*Log[(z*Sqrt[a^2 + 1])/(z + a)]]; 
 
 
 End[];
