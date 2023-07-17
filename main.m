@@ -55,13 +55,13 @@ RealApart[expr] \:7ed9\:51fa expr \:5728\:5b9e\:6570\:57df\:4e0a\:7684\:88c2\:98
 RealApart[expr,x] \:7ed9\:51fa expr \:5173\:4e8e x \:5728\:5b9e\:6570\:57df\:4e0a\:7684\:88c2\:9879."; 
 
 
-FindIdentities::usage = "\
-FindIdentities[expr1,expr2,x] \:7ed9\:51fa\:5173\:4e8e expr1,expr2 \:7684\:6052\:7b49\:5f0f.
-";
-
-
 CorrectionTest::usage = "\
 CorrectionTest[org,res,{x,\!\(\*SubscriptBox[\(x\), \(min\)]\),\!\(\*SubscriptBox[\(x\), \(max\)]\)}] \:ff08\:5b9e\:9a8c\:6027\:ff09\:68c0\:9a8c res \:5173\:4e8e org \:7684\:4fee\:6b63\:662f\:5426\:6b63\:786e."; 
+
+
+FindIdentities::usage = "\
+FindIdentities[expr1,expr2,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed9\:51fa\:5173\:4e8e expr1,expr2 \:7684\:6052\:7b49\:5f0f.
+";
 
 
 BivariablePlot::usage = "\
@@ -90,15 +90,7 @@ ClearAll["`*"];
 (*Private*)
 
 
-(* ::Subsection:: *)
-(*TEST*)
-
-
-Attributes[TEST] = {HoldAll}; 
-TEST[code_, n_:1] := Module[{}, ClearSystemCache[]; AbsoluteTiming[Do[code, n - 1]; code]]
-
-
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ExpressionPivot*)
 
 
@@ -106,7 +98,7 @@ Attributes[ExpressionPivot] = {Listable};
 ExpressionPivot[expr_] := FirstCase[expr, _Symbol?(Not @* NumericQ), Symbol, {-1}]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*CoefficientSeparation*)
 
 
@@ -115,7 +107,7 @@ CoefficientSeparation[expr_, x_] /; FreeQ[expr, x] := {expr, 1};
 CoefficientSeparation[expr_, x_] := Replace[expr, Longest[c_.]*(r_) /; FreeQ[c, x] -> {c, r}]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FirstCoefficient*)
 
 
@@ -123,7 +115,7 @@ Attributes[FirstCoefficient] = {Listable};
 FirstCoefficient[poly_, x_] := Coefficient[poly, x, Exponent[poly, x]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*PolynomialRoots*)
 
 
@@ -135,7 +127,7 @@ PolynomialRoots[poly_, x_, OptionsPattern[]] := List @@ (Roots[poly == 0, x, Cub
       Quartics -> OptionValue[ToRadicals]] /. Equal -> (#2 & )); 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ArcTanLimitAtPositiveInfinity*)
 
 
@@ -148,7 +140,7 @@ ArcTanLimitAtPositiveInfinity[expr_, x_] := Module[{nd, e, r}, nd = NumeratorDen
 (*Public*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*IBP*)
 
 
@@ -162,7 +154,7 @@ IBP[u_, v_, {x_Symbol, a_, b_}, OptionsPattern[]] := Module[{assum = OptionValue
 IBP[f_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := IBP[f, x, {x, a, b}, opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*IBS*)
 
 
@@ -185,7 +177,7 @@ IBS[f_, {a_, b_}, ex_ -> t_Symbol, x_Symbol, opts:OptionsPattern[]] := IBS[f, {a
 IBS[f_, {a_, b_}, ex_ -> et_, opts:OptionsPattern[]] := IBS[f, {a, b}, ex -> et, ExpressionPivot[ex], ExpressionPivot[et], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ApartArcTan*)
 
 
@@ -202,7 +194,7 @@ ApartArcTan[expr_, x_Symbol, OptionsPattern[]] /; RationalExpressionQ[expr, x] :
 ApartArcTan[expr_, opts:OptionsPattern[]] := ApartArcTan[expr, ExpressionPivot[expr], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ComplexFactor*)
 
 
@@ -213,7 +205,7 @@ ComplexFactor[poly_, x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] := Firs
 ComplexFactor[poly_, opts:OptionsPattern[]] := ComplexFactor[poly, ExpressionPivot[poly], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ComplexApart*)
 
 
@@ -224,7 +216,7 @@ ComplexApart[expr_, x_Symbol, OptionsPattern[]] /; RationalExpressionQ[expr, x] 
 ComplexApart[poly_, opts:OptionsPattern[]] := ComplexApart[poly, ExpressionPivot[poly], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*RealFactor*)
 
 
@@ -237,7 +229,7 @@ RealFactor[poly_, x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] :=
 RealFactor[poly_, opts:OptionsPattern[]] := RealFactor[poly, ExpressionPivot[poly], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*RealApart*)
 
 
@@ -248,22 +240,11 @@ RealApart[expr_, x_Symbol, opts:OptionsPattern[]] /; RationalExpressionQ[expr, x
 RealApart[expr_, opts:OptionsPattern[]] := RealApart[expr, ExpressionPivot[expr], opts]; 
 
 
-(* ::Subsection:: *)
-(*FindIdentities*)
-
-
-FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && RationalExpressionQ[expr2, x] := 
-   Module[{p1, p2, roots, limit}, p1 = Numerator[Simplify[expr1]]*Denominator[Simplify[expr2]]; 
-     p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; roots = DeleteDuplicates[SolveValues[D[p1, x]*p2 == D[p2, x]*p1, x]]; 
-     DeleteDuplicates[Flatten[Reap[Do[limit = Simplify[Limit[p1/p2, x -> i]]; If[limit =!= 0 && Element[limit, Rationals], 
-            Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2]]]]]; 
-
-
 (* ::Section:: *)
 (*Experimental*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*CorrectionTest*)
 
 
@@ -291,7 +272,18 @@ CorrectionTest[org_, res_, {x_, xmin_, xmax_}, OptionsPattern[]] :=
       ItemSize -> {Scaled[0.5], Automatic}, Frame -> All]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
+(*FindIdentities*)
+
+
+FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && RationalExpressionQ[expr2, x] := 
+   Module[{p1, p2, roots, limit}, p1 = Numerator[Simplify[expr1]]*Denominator[Simplify[expr2]]; 
+     p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; roots = DeleteDuplicates[SolveValues[D[p1, x]*p2 == D[p2, x]*p1, x]]; 
+     DeleteDuplicates[Flatten[Reap[Do[limit = Simplify[Limit[p1/p2, x -> i]]; If[limit =!= 0 && Element[limit, Rationals], 
+            Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2]]]]]; 
+
+
+(* ::Subsection::Closed:: *)
 (*BivariablePlot*)
 
 
