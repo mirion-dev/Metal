@@ -140,12 +140,11 @@ ArcTanLimitAtPositiveInfinity[expr_, x_] := Module[{nd, e, r}, nd = NumeratorDen
 (*Public*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*IBP*)
 
 
-Options[IBP] = {Assumptions -> $Assumptions}; 
-IBP[u_, v_, x_Symbol, OptionsPattern] := Module[{coef, rem}, {coef, rem} = CoefficientSeparation[v*D[u, x], x]; 
+IBP[u_, v_, x_Symbol, OptionsPattern[]] := Module[{coef, rem}, {coef, rem} = CoefficientSeparation[v*D[u, x], x]; 
      u*v - coef*Inactive[Integrate][rem, x]]; 
 IBP[f_, x_Symbol, OptionsPattern[]] := IBP[f, x, x]; 
 IBP[u_, v_, {x_Symbol, a_, b_}, OptionsPattern[]] := Module[{assum = OptionValue[Assumptions], c, r}, 
