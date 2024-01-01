@@ -68,6 +68,10 @@ BivariablePlot::usage = "\
 BivariablePlot[list,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed8\:5236\:591a\:5143 list \:7684\:5173\:7cfb\:56fe.
 ";
 
+ContinuedFractionExpand::usage = "\
+ContinuedFractionExpand[f,{x,n}] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed9\:51fa\:51fd\:6570 f \:7684\:524d n \:9879\:5c55\:5f00.
+";
+
 
 (* ::Section:: *)
 (*Option*)
@@ -282,7 +286,7 @@ FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && Rat
             Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2]]]]]; 
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*BivariablePlot*)
 
 
@@ -300,6 +304,14 @@ BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid
      vertexes = Table[i -> (Evaluate[Inset[vertexStylize[Piecewise[{{labels[[i]] == list[[i]], isValid}, {list[[i]], True}}]], #1]] & ), 
        {i, usedVertexes}]; edges = edgeStylize @@@ edges; Graph[edges, PlotTheme -> "DiagramBlack", VertexLabels -> None, 
       VertexShapeFunction -> vertexes, PlotRangePadding -> Scaled[0.1]]]; 
+
+
+(* ::Subsection:: *)
+(*ContinuedFractionExpand*)
+
+
+ContinuedFractionExpand[f_, {x_, n_}] := Module[{a, r}, r[0] = f; r[i_] := r[i] = 1/(r[i - 1] - a[i - 1]); 
+     a[i_] := a[i] = Quiet[Normal[Series[r[i], {x, Infinity, 0}]]]; Simplify[Table[a[i], {i, 0, n}]]]; 
 
 
 End[];
