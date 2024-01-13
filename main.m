@@ -55,6 +55,11 @@ RealApart[expr] \:7ed9\:51fa expr \:5728\:5b9e\:6570\:57df\:4e0a\:7684\:88c2\:98
 RealApart[expr,x] \:7ed9\:51fa expr \:5173\:4e8e x \:5728\:5b9e\:6570\:57df\:4e0a\:7684\:88c2\:9879."; 
 
 
+ContinuedFractionExpand::usage = "\
+ContinuedFractionExpand[f,{x,n}] \:7ed9\:51fa\:51fd\:6570 f \:7684\:524d n \:9879\:8fde\:5206\:6570\:5c55\:5f00.
+";
+
+
 CorrectionTest::usage = "\
 CorrectionTest[org,res,{x,\!\(\*SubscriptBox[\(x\), \(min\)]\),\!\(\*SubscriptBox[\(x\), \(max\)]\)}] \:ff08\:5b9e\:9a8c\:6027\:ff09\:68c0\:9a8c res \:5173\:4e8e org \:7684\:4fee\:6b63\:662f\:5426\:6b63\:786e."; 
 
@@ -66,10 +71,6 @@ FindIdentities[expr1,expr2,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed9\:51fa\:5173\:
 
 BivariablePlot::usage = "\
 BivariablePlot[list,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed8\:5236\:591a\:5143 list \:7684\:5173\:7cfb\:56fe.
-";
-
-ContinuedFractionExpand::usage = "\
-ContinuedFractionExpand[f,{x,n}] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed9\:51fa\:51fd\:6570 f \:7684\:524d n \:9879\:5c55\:5f00.
 ";
 
 
@@ -243,6 +244,14 @@ RealApart[expr_, x_Symbol, opts:OptionsPattern[]] /; RationalExpressionQ[expr, x
 RealApart[expr_, opts:OptionsPattern[]] := RealApart[expr, ExpressionPivot[expr], opts]; 
 
 
+(* ::Subsection:: *)
+(*ContinuedFractionExpand*)
+
+
+ContinuedFractionExpand[f_, {x_Symbol, n_Integer}] := Module[{a, b = f}, Table[a = Quiet[Normal[Series[b, {x, Infinity, 0}]]]; b = FullSimplify[1/(b - a)]; a, 
+     {i, n}]]; 
+
+
 (* ::Section:: *)
 (*Experimental*)
 
@@ -304,14 +313,6 @@ BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid
      vertexes = Table[i -> (Evaluate[Inset[vertexStylize[Piecewise[{{labels[[i]] == list[[i]], isValid}, {list[[i]], True}}]], #1]] & ), 
        {i, usedVertexes}]; edges = edgeStylize @@@ edges; Graph[edges, PlotTheme -> "DiagramBlack", VertexLabels -> None, 
       VertexShapeFunction -> vertexes, PlotRangePadding -> Scaled[0.1]]]; 
-
-
-(* ::Subsection:: *)
-(*ContinuedFractionExpand*)
-
-
-ContinuedFractionExpand[f_, {x_, n_}] := Module[{a, r}, r[0] = f; r[i_] := r[i] = 1/(r[i - 1] - a[i - 1]); 
-     a[i_] := a[i] = Quiet[Normal[Series[r[i], {x, Infinity, 0}]]]; Simplify[Table[a[i], {i, 0, n}]]]; 
 
 
 End[];
