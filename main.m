@@ -1,5 +1,9 @@
 (* ::Package:: *)
 
+(* ::Subsection::Closed:: *)
+(*Begin*)
+
+
 BeginPackage["Mirion`"]; 
 ClearAll["`*"]; 
 
@@ -60,8 +64,14 @@ ContinuedFractionExpand[f,{x,n}] \:7ed9\:51fa\:51fd\:6570 f \:7684\:524d n \:987
 ";
 
 
-CorrectionTest::usage = "\
-CorrectionTest[org,res,{x,\!\(\*SubscriptBox[\(x\), \(min\)]\),\!\(\*SubscriptBox[\(x\), \(max\)]\)}] \:ff08\:5b9e\:9a8c\:6027\:ff09\:68c0\:9a8c res \:5173\:4e8e org \:7684\:4fee\:6b63\:662f\:5426\:6b63\:786e."; 
+FromContinuedFractionExpand::usage = "\
+FromContinuedFractionExpand[list] \:6839\:636e list \:6784\:9020\:8fde\:5206\:6570.
+";
+
+
+ContinuedFractionExpandPeriod::usage = "\
+ContinuedFractionExpandPeriod[\!\(\*SqrtBox[\(r\)]\),x] \:7ed9\:51fa\:51fd\:6570 \!\(\*SqrtBox[\(r\)]\) \:7684\:8fde\:5206\:6570\:5c55\:5f00\:6700\:5c0f\:5468\:671f.
+";
 
 
 FindIdentities::usage = "\
@@ -80,7 +90,6 @@ BivariablePlot[list,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed8\:5236\:591a\:5143 li
 
 GenerateConstant::usage = "GenerateConstant \:5173\:4e8e\:662f\:5426\:751f\:6210\:5e38\:6570\:7684\:9009\:9879"; 
 SimplifyFunction::usage = "SimplifyFunction \:5173\:4e8e\:5316\:7b80\:51fd\:6570\:7684\:9009\:9879"; 
-VerifyDiscontinuities::usage = "VerifyDiscontinuities \:5173\:4e8e\:662f\:5426\:9a8c\:8bc1\:95f4\:65ad\:70b9\:7684\:9009\:9879"; 
 
 
 Begin["`Private`"]; 
@@ -145,7 +154,7 @@ ArcTanLimitAtPositiveInfinity[expr_, x_] := Module[{nd, e, r}, nd = NumeratorDen
 (*Public*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*IBP*)
 
 
@@ -244,12 +253,31 @@ RealApart[expr_, x_Symbol, opts:OptionsPattern[]] /; RationalExpressionQ[expr, x
 RealApart[expr_, opts:OptionsPattern[]] := RealApart[expr, ExpressionPivot[expr], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ContinuedFractionExpand*)
 
 
-ContinuedFractionExpand[f_, {x_Symbol, n_Integer}] := Module[{a, b = f}, Table[a = Quiet[Normal[Series[b, {x, Infinity, 0}]]]; b = FullSimplify[1/(b - a)]; a, 
-     {i, n}]]; 
+ContinuedFractionExpand[f_, {x_Symbol, n_Integer}] := Module[{a, b = f}, Quiet[Table[a = Normal[Series[b, {x, Infinity, 0}]]; b = FullSimplify[1/(b - a)]; a, 
+      {i, n}], Series::sbyc]]; 
+
+
+(* ::Subsection::Closed:: *)
+(*FromContinuedFractionExpand*)
+
+
+FromContinuedFractionExpand[list_List] := Fold[#2 + 1/#1 & , Reverse[list]]; 
+
+
+(* ::Subsection::Closed:: *)
+(*ContinuedFractionExpandPeriod*)
+
+
+Options[ContinuedFractionExpandPeriod] = {MaxIterations -> 100}; 
+ContinuedFractionExpandPeriod::lim = "Iteration limit of `1` exceeded."; 
+ContinuedFractionExpandPeriod[Sqrt[rad_], x_Symbol, OptionsPattern[]] /; PolynomialQ[rad, x] && SquareFreeQ[rad, x] := 
+   Module[{lim = OptionValue[MaxIterations], g, a = 0, b = 1, c}, g = Exponent[rad, x]/2 - 1; 
+     Reap[Do[If[i == lim, Message[ContinuedFractionExpandPeriod::lim, lim]]; c = Normal[Series[a + b*Sqrt[rad], {x, Infinity, 0}]]; 
+         If[i > 1 && Exponent[c, x] > g, Break[], Sow[c]]; {a, b} = Simplify[{a - c, -b}/((a - c)^2 - b^2*rad)]; , {i, Infinity}]][[2,1]]]; 
 
 
 (* ::Section:: *)
@@ -257,62 +285,36 @@ ContinuedFractionExpand[f_, {x_Symbol, n_Integer}] := Module[{a, b = f}, Table[a
 
 
 (* ::Subsection::Closed:: *)
-(*CorrectionTest*)
-
-
-CorrectionTest::overtime = "`` \:8ba1\:7b97\:8d85\:65f6"; 
-Options[CorrectionTest] = {Skip -> {}, TimeConstraint -> Infinity, VerifyDiscontinuities -> {}, WorkingPrecision -> $MinPrecision}; 
-CorrectionTest[org_, res_, {x_, xmin_, xmax_}, OptionsPattern[]] := 
-   Module[{table = {{Style["\:5b9a\:4e49\:57df", Bold], Style["\:95f4\:65ad\:70b9", Bold]}, {Style[True, Bold, RGBColor["#4081ff"]], 
-        Style[False, Bold, RGBColor["#4081ff"]]}, {Style[True, Bold, RGBColor["#eb7100"]], Style[False, Bold, RGBColor["#eb7100"]]}, 
-       {Style["\:56fe\:50cf", Bold], SpanFromLeft}, {Null, SpanFromLeft}}, skip = OptionValue[Skip], cons = OptionValue[TimeConstraint], 
-     veri = OptionValue[VerifyDiscontinuities], prec = OptionValue[WorkingPrecision], dom = True}, 
-    If[ !ListQ[skip], skip = {skip}]; If[ !ListQ[veri], veri = {veri}]; If[ !AssociationQ[cons], 
-      cons = Association["\:5b9a\:4e49\:57df" -> cons, "\:95f4\:65ad\:70b9" -> cons, "\:56fe\:50cf" -> cons]]; If[ !MemberQ[skip, "\:5b9a\:4e49\:57df"], 
-      TimeConstrained[table[[2,1]] = Item[Style[dom = Reduce[FunctionDomain[org, x], Element[x, Reals]], Bold, RGBColor["#4081ff"]], 
-           ItemSize -> Automatic]; table[[3,1]] = Item[Style[Reduce[FunctionDomain[res, x] && dom, Element[x, Reals]], Bold, 
-            RGBColor["#eb7100"]], ItemSize -> Automatic]; , cons["\:5b9a\:4e49\:57df"], Message[CorrectionTest::overtime, "\:5b9a\:4e49\:57df"]; ]; ]; 
-     If[ !MemberQ[skip, "\:95f4\:65ad\:70b9"], 
-      TimeConstrained[table[[2,2]] = Item[Style[Reduce[FunctionDiscontinuities[org, x] && dom, Element[x, Reals]], Bold, RGBColor["#4081ff"]], 
-           ItemSize -> Automatic]; table[[3,2]] = Item[Style[Reduce[FunctionDiscontinuities[res, x] && dom, Element[x, Reals]], Bold, 
-            RGBColor["#eb7100"]], ItemSize -> Automatic]; , cons["\:95f4\:65ad\:70b9"], Message[CorrectionTest::overtime, "\:95f4\:65ad\:70b9"]; ]; ]; 
-     If[ !MemberQ[skip, "\:56fe\:50cf"], 
-      TimeConstrained[table[[5,1]] = Plot[{org, res, Evaluate[D[res /. {Abs[p_] -> Piecewise[{{p, p > 0}, {-p, p < 0}}], Sign[p_] -> 
-                Piecewise[{{1, p > 0}, {-1, p < 0}}]}, x]]}, {x, xmin, xmax}, PlotStyle -> 96, ImageSize -> Medium, 
-          Epilog -> {Black, PointSize[Medium], Point[Block[{$MinPrecision = prec}, N[Table[{i, res /. x -> i}, {i, veri}]]]]}], cons["\:56fe\:50cf"], 
-        Message[CorrectionTest::overtime, "\:56fe\:50cf"]; ]; ]; Grid[table, Alignment -> {Center, Center}, Spacings -> {1, 1}, 
-      ItemSize -> {Scaled[0.5], Automatic}, Frame -> All]]; 
-
-
-(* ::Subsection::Closed:: *)
 (*FindIdentities*)
 
 
 FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && RationalExpressionQ[expr2, x] := 
-   Module[{p1, p2, roots, limit}, p1 = Numerator[Simplify[expr1]]*Denominator[Simplify[expr2]]; 
-     p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; roots = DeleteDuplicates[SolveValues[D[p1, x]*p2 == D[p2, x]*p1, x]]; 
-     DeleteDuplicates[Flatten[Reap[Do[limit = Simplify[Limit[p1/p2, x -> i]]; If[limit =!= 0 && Element[limit, Rationals], 
-            Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2]]]]]; 
+   Module[{p1, p2, roots, limit}, p1 = Numerator[Simplify[expr1]]*Denominator[Simplify[expr2]]; p2 = Numerator[Simplify[expr2]]*Denominator[Simplify[expr1]]; 
+     roots = DeleteDuplicates[SolveValues[D[p1, x]*p2 == D[p2, x]*p1, x]]; 
+     DeleteDuplicates[Reap[Do[limit = Simplify[Limit[p1/p2, x -> i]]; If[limit =!= 0 && Element[limit, Rationals], 
+           Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2,1]]]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*BivariablePlot*)
 
 
 Options[BivariablePlot] = {PlotLabels -> None}; 
-BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid, const, constQ, edges, vertexes, usedVertexes, edgeStylize, 
-     vertexStylize}, labels = OptionValue[PlotLabels]; isValid = labels =!= None && Length[list] === Length[labels]; 
-     constQ[value_] := FreeQ[value, x] &&  !PossibleZeroQ[value]; edgeStylize[edge_, value_] := 
-      Labeled[edge, Placed[Style[value, 14, FontFamily -> "CMU Serif"], 0.5]]; vertexStylize[value_] := 
-      Framed[Style[value, Black, 14, FontFamily -> "CMU Serif"], FrameStyle -> None]; 
-     edges = Table[Piecewise[{{{UndirectedEdge[bivars[[1]], bivars[[2]]], const}, 
-          constQ[const = Simplify[list[[bivars[[1]]]]^2 + list[[bivars[[2]]]]^2]]}, 
-         {Piecewise[{{{DirectedEdge[bivars[[2]], bivars[[1]]], -const}, TrueQ[const < 0]}, {{DirectedEdge[bivars[[1]], bivars[[2]]], const}, 
-             True}}], constQ[const = Simplify[list[[bivars[[1]]]]^2 - list[[bivars[[2]]]]^2]]}, {Nothing, True}}], 
-       {bivars, Subsets[Range[Length[list]], {2}]}]; usedVertexes = DeleteDuplicates[Cases[edges[[All,1]], _Integer, {2}]]; 
-     vertexes = Table[i -> (Evaluate[Inset[vertexStylize[Piecewise[{{labels[[i]] == list[[i]], isValid}, {list[[i]], True}}]], #1]] & ), 
-       {i, usedVertexes}]; edges = edgeStylize @@@ edges; Graph[edges, PlotTheme -> "DiagramBlack", VertexLabels -> None, 
-      VertexShapeFunction -> vertexes, PlotRangePadding -> Scaled[0.1]]]; 
+BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid, const, constQ, edges, vertexes, usedVertexes, edgeStylize, vertexStylize}, 
+    labels = OptionValue[PlotLabels]; isValid = labels =!= None && Length[list] === Length[labels]; constQ[value_] := FreeQ[value, x] &&  !PossibleZeroQ[value]; 
+     edgeStylize[edge_, value_] := Labeled[edge, Placed[Style[value, 14, FontFamily -> "Times"], 0.5]]; 
+     vertexStylize[value_] := Framed[Style[value, Black, 14, FontFamily -> "Times"], FrameStyle -> None]; 
+     edges = Table[Piecewise[{{{UndirectedEdge[bivars[[1]], bivars[[2]]], const}, constQ[const = Simplify[list[[bivars[[1]]]]^2 + list[[bivars[[2]]]]^2]]}, 
+         {Piecewise[{{{DirectedEdge[bivars[[2]], bivars[[1]]], -const}, TrueQ[const < 0]}, {{DirectedEdge[bivars[[1]], bivars[[2]]], const}, True}}], 
+          constQ[const = Simplify[list[[bivars[[1]]]]^2 - list[[bivars[[2]]]]^2]]}, {Nothing, True}}], {bivars, Subsets[Range[Length[list]], {2}]}]; 
+     usedVertexes = DeleteDuplicates[Cases[edges[[All,1]], _Integer, {2}]]; 
+     vertexes = Table[i -> (Evaluate[Inset[vertexStylize[Piecewise[{{labels[[i]] == list[[i]], isValid}, {list[[i]], True}}]], #1]] & ), {i, usedVertexes}]; 
+     edges = edgeStylize @@@ edges; Graph[edges, ImageSize -> Medium, PlotTheme -> "DiagramBlack", VertexLabels -> None, VertexShapeFunction -> vertexes, 
+      PlotRangePadding -> Scaled[0.1]]]; 
+
+
+(* ::Subsection::Closed:: *)
+(*End*)
 
 
 End[];
