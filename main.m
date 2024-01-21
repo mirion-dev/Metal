@@ -308,7 +308,7 @@ ContinuedFractionExpand[f_, {x_Symbol, n_Integer}] := Module[{a, b = f}, Quiet[T
 FromContinuedFractionExpand[list_List] := Fold[#2 + 1/#1 & , Reverse[list]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ContinuedFractionExpandPeriod*)
 
 
@@ -371,14 +371,14 @@ BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid
       PlotRangePadding -> Scaled[0.1]]]; 
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*IntegrateCF*)
 
 
 Options[IntegrateCF] = {MaxIterations -> 100, WorkingPrecision -> Infinity}; 
 IntegrateCF[0, x_Symbol] := 0; 
 IntegrateCF[(poly_)/Sqrt[rad_], x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] && PolynomialQ[rad, x] && SquareFreeQ[rad, x] := 
-   Module[{lim = OptionValue[MaxIterations], prec = OptionValue[WorkingPrecision], r, n, g, p, q, alg, coef, trans, nrad}, 
+   Module[{lim = OptionValue[MaxIterations], prec = OptionValue[WorkingPrecision], r, n, g, p, q, alg, coef, trans}, 
     r = N[rad, prec]; n = Exponent[rad, x]; g = n/2 - 1; 
      ({p, q} = NumeratorDenominator[Together[FromContinuedFractionExpand[ContinuedFractionExpandPeriod[Sqrt[r], x, MaxIterations -> lim]]]]; 
        alg = If[NumericQ[prec], PolynomialFit[#1, x, g] & , Simplify][Sqrt[r]*D[Log[p + q*Sqrt[r]], x]]; 
