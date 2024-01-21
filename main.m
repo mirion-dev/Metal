@@ -98,6 +98,16 @@ ContinuedFractionExpandPeriod[\!\(\*SqrtBox[\(r\)]\),x] \:7ed9\:51fa\:51fd\:6570
 ";
 
 
+PolynomialFit::usage = "\
+PolynomialFit[expr,x,n] \:7ed9\:51fa\:8868\:8fbe\:5f0f expr \:7684 n \:6b21\:591a\:9879\:5f0f\:8fd1\:4f3c.
+"
+
+
+PolynomialReverse::usage = "\
+PolynomialReverse[poly,x] \:7ed9\:51fa\:591a\:9879\:5f0f poly \:7684\:53cd\:5411\:591a\:9879\:5f0f.
+"
+
+
 FindIdentities::usage = "\
 FindIdentities[expr1,expr2,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed9\:51fa\:5173\:4e8e expr1,expr2 \:7684\:6052\:7b49\:5f0f.
 ";
@@ -108,7 +118,7 @@ BivariablePlot[list,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed8\:5236\:591a\:5143 li
 ";
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Option*)
 
 
@@ -132,7 +142,7 @@ ClearAll["`*"];
 (*Public*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*TIMING*)
 
 
@@ -140,7 +150,7 @@ Attributes[TIMING] = {HoldAll};
 TIMING[code_, n_Integer:1] := Module[{}, ClearSystemCache[]; AbsoluteTiming[Do[code, n - 1]; code]]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ExpressionPivot*)
 
 
@@ -148,7 +158,7 @@ Attributes[ExpressionPivot] = {Listable};
 ExpressionPivot[expr_] := FirstCase[expr, _Symbol?(Not @* NumericQ), Symbol, {-1}]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*CoefficientSeparation*)
 
 
@@ -157,7 +167,7 @@ CoefficientSeparation[expr_, x_Symbol] /; FreeQ[expr, x] := {expr, 1};
 CoefficientSeparation[expr_, x_Symbol] := Replace[expr, Longest[c_.]*(r_) /; FreeQ[c, x] -> {c, r}]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FirstCoefficient*)
 
 
@@ -165,7 +175,7 @@ Attributes[FirstCoefficient] = {Listable};
 FirstCoefficient[poly_, x_Symbol] := Coefficient[poly, x, Exponent[poly, x]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*PolynomialRoots*)
 
 
@@ -176,7 +186,7 @@ PolynomialRoots[poly_, x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] := Li
      Equal -> (#2 & )); 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*PolynomialRootApproximant*)
 
 
@@ -184,7 +194,7 @@ Attributes[PolynomialRootApproximant] = {Listable};
 PolynomialRootApproximant[poly_, x_Symbol] /; PolynomialQ[poly, x] := FromDigits[RootApproximant /@ Reverse[CoefficientList[poly, x]], x]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*IBP*)
 
 
@@ -195,7 +205,7 @@ IBP[u_, v_, {x_Symbol, a_, b_}, OptionsPattern[]] := Module[{assum = OptionValue
 IBP[f_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := IBP[f, x, {x, a, b}, opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*IBS*)
 
 
@@ -217,7 +227,7 @@ IBS[f_, {a_, b_}, ex_ -> t_Symbol, x_Symbol, opts:OptionsPattern[]] := IBS[f, {a
 IBS[f_, {a_, b_}, ex_ -> et_, opts:OptionsPattern[]] := IBS[f, {a, b}, ex -> et, ExpressionPivot[ex], ExpressionPivot[et], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ApartArcTan*)
 
 
@@ -233,7 +243,7 @@ ApartArcTan[expr_, x_Symbol, OptionsPattern[]] /; RationalExpressionQ[expr, x] :
          result += Piecewise[Prepend[Table[{c[[i + 1]], poles[[i]] < x < poles[[i + 1]]}, {i, Length[poles] - 1}], {First[c], x < First[poles]}]]]; ]; result]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ComplexFactor*)
 
 
@@ -244,7 +254,7 @@ ComplexFactor[poly_, x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] := Firs
 ComplexFactor[poly_, opts:OptionsPattern[]] := ComplexFactor[poly, ExpressionPivot[poly], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ComplexApart*)
 
 
@@ -255,7 +265,7 @@ ComplexApart[expr_, x_Symbol, OptionsPattern[]] /; RationalExpressionQ[expr, x] 
 ComplexApart[poly_, opts:OptionsPattern[]] := ComplexApart[poly, ExpressionPivot[poly], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*RealFactor*)
 
 
@@ -267,7 +277,7 @@ RealFactor[poly_, x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] := FirstCo
 RealFactor[poly_, opts:OptionsPattern[]] := RealFactor[poly, ExpressionPivot[poly], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*RealApart*)
 
 
@@ -278,7 +288,7 @@ RealApart[expr_, x_Symbol, opts:OptionsPattern[]] /; RationalExpressionQ[expr, x
 RealApart[expr_, opts:OptionsPattern[]] := RealApart[expr, ExpressionPivot[expr], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ContinuedFractionExpand*)
 
 
@@ -286,30 +296,47 @@ ContinuedFractionExpand[f_, {x_Symbol, n_Integer}] := Module[{a, b = f}, Quiet[T
       {i, n}], Series::sbyc]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FromContinuedFractionExpand*)
 
 
 FromContinuedFractionExpand[list_List] := Fold[#2 + 1/#1 & , Reverse[list]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ContinuedFractionExpandPeriod*)
 
 
 Options[ContinuedFractionExpandPeriod] = {MaxIterations -> 100}; 
 ContinuedFractionExpandPeriod::lim = "Iteration limit of `1` exceeded."; 
 ContinuedFractionExpandPeriod[Sqrt[rad_], x_Symbol, OptionsPattern[]] /; PolynomialQ[rad, x] && SquareFreeQ[rad, x] := 
-   Module[{lim = OptionValue[MaxIterations], g, a = 0, b = 1, c}, g = Exponent[rad, x]/2 - 1; 
-     Reap[Do[If[i == lim, Message[ContinuedFractionExpandPeriod::lim, lim]]; c = Normal[Series[a + b*Sqrt[rad], {x, Infinity, 0}]]; 
-         If[i > 1 && Exponent[c, x] > g, Break[], Sow[c]]; {a, b} = Simplify[{a - c, -b}/((a - c)^2 - b^2*rad)]; , {i, Infinity}]][[2,1]]]; 
+   Module[{lim = OptionValue[MaxIterations], r, n, a, b, c}, r = PolynomialReverse[rad, x]; n = Exponent[rad, x]; {a, b} = {0, 1}; 
+     Reap[Do[If[i == lim, Message[ContinuedFractionExpandPeriod::lim, lim]; Break[]]; c = Normal[Series[a + b*Sqrt[r], {x, 0, n/2}]]; 
+         If[i > 1 &&  !PossibleZeroQ[Coefficient[c, x, 0]], Break[], Sow[PolynomialReverse[c, x]]]; {a, b} = Simplify[(x^n*{a - c, -b})/((a - c)^2 - b^2*r)]; , 
+        {i, Infinity}]][[2,1]]]; 
+
+
+(* ::Subsection::Closed:: *)
+(*PolynomialFit*)
+
+
+Options[PolynomialFit] = {InterpolatingFunction -> (RandomReal[#1, WorkingPrecision -> 100] & )}; 
+PolynomialFit[expr_, x_Symbol, n_Integer, OptionsPattern[]] := Module[{intf = OptionValue[InterpolatingFunction]}, 
+    InterpolatingPolynomial[Table[({#1, expr /. x -> #1} & )[intf[i]], {i, n + 1}], x]]; 
+
+
+(* ::Subsection::Closed:: *)
+(*PolynomialReverse*)
+
+
+PolynomialReverse[poly_, x_Symbol] /; PolynomialQ[poly, x] := FromDigits[CoefficientList[poly, x], x]; 
 
 
 (* ::Section:: *)
 (*Experimental*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FindIdentities*)
 
 
@@ -320,7 +347,7 @@ FindIdentities[expr1_, expr2_, x_Symbol] /; RationalExpressionQ[expr1, x] && Rat
            Sow[Defer[Evaluate[p1]] - limit*p2 == Factor[p1 - limit*p2]]]; , {i, roots}]][[2,1]]]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*BivariablePlot*)
 
 
