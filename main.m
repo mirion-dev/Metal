@@ -118,6 +118,11 @@ BivariablePlot[list,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed8\:5236\:591a\:5143 li
 ";
 
 
+IntegrateCF::usage = "\
+IntegrateCF[expr,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:4f7f\:7528\:8fde\:5206\:6570\:5c55\:5f00\:6cd5\:6c42 expr \:5173\:4e8e x \:7684\:79ef\:5206.
+"
+
+
 (* ::Section::Closed:: *)
 (*Option*)
 
@@ -303,7 +308,7 @@ ContinuedFractionExpand[f_, {x_Symbol, n_Integer}] := Module[{a, b = f}, Quiet[T
 FromContinuedFractionExpand[list_List] := Fold[#2 + 1/#1 & , Reverse[list]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ContinuedFractionExpandPeriod*)
 
 
@@ -364,6 +369,22 @@ BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid
      vertexes = Table[i -> (Evaluate[Inset[vertexStylize[Piecewise[{{labels[[i]] == list[[i]], isValid}, {list[[i]], True}}]], #1]] & ), {i, usedVertexes}]; 
      edges = edgeStylize @@@ edges; Graph[edges, ImageSize -> Medium, PlotTheme -> "DiagramBlack", VertexLabels -> None, VertexShapeFunction -> vertexes, 
       PlotRangePadding -> Scaled[0.1]]]; 
+
+
+(* ::Subsection::Closed:: *)
+(*IntegrateCF*)
+
+
+Options[IntegrateCF] = {MaxIterations -> 100, WorkingPrecision -> Infinity}; 
+IntegrateCF[0, x_Symbol] := 0; 
+IntegrateCF[(poly_)/Sqrt[rad_], x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] && PolynomialQ[rad, x] && SquareFreeQ[rad, x] := 
+   Module[{lim = OptionValue[MaxIterations], prec = OptionValue[WorkingPrecision], r, n, g, p, q, alg, coef, trans, nrad}, 
+    r = N[rad, prec]; n = Exponent[rad, x]; g = n/2 - 1; 
+     ({p, q} = NumeratorDenominator[Together[FromContinuedFractionExpand[ContinuedFractionExpandPeriod[Sqrt[r], x, MaxIterations -> lim]]]]; 
+       alg = If[NumericQ[prec], PolynomialFit[#1, x, g] & , Simplify][Sqrt[r]*D[Log[p + q*Sqrt[r]], x]]; 
+       coef = Simplify[Coefficient[poly, x, g]/Coefficient[alg, x, g]]; trans = Simplify[poly - coef*alg]; 
+       If[NumericQ[prec], coef //= RootApproximant; {p, q, trans} //= PolynomialRootApproximant[#1, x] & ; ]; 
+       coef*Log[p + q*Sqrt[rad]] + IntegrateCF[trans/Sqrt[rad], x]) /;  !PossibleZeroQ[Coefficient[poly, x, g]]]; 
 
 
 (* ::Subsection::Closed:: *)
