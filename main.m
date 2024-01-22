@@ -356,17 +356,17 @@ IntegrateCFImpl[poly_, rad_, x_, opts:OptionsPattern[]] := Module[{prec = Option
      {p, q} = NumeratorDenominator[Together[FromContinuedFractionExpand[ContinuedFractionExpandPeriod[Sqrt[r], x, opts1]]]]; 
      alg = If[prec === Infinity, Cancel, PolynomialFit[#1, x, g, opts2] & ][D[p, x]/q]; coef = Coefficient[poly, x, g]/Coefficient[alg, x, g]; 
      If[prec === Infinity, Simplify, PolynomialRootApproximant[#1, x] & ][{coef, p, q, poly - coef*alg}]]; 
-IntegrateCF[_?PossibleZeroQ, x_Symbol] := 0; 
+IntegrateCF[0, x_Symbol] := 0; 
 IntegrateCF[(poly_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /; PolynomialQ[poly, x] && PolynomialQ[rad, x] && SquareFreeQ[rad, x] := 
    Module[{n, g}, n = Exponent[rad, x]; g = n/2 - 1; (#1*Log[#2 + #3*Sqrt[rad]] + IntegrateCF[#4/Sqrt[rad], x] & ) @@ IntegrateCFImpl[poly, rad, x, opts] /; 
        !PossibleZeroQ[Coefficient[poly, x, g]]]; 
 IntegrateCF[(rat_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /;  !PolynomialQ[rat, x] && RationalExpressionQ[rat, x] && PolynomialQ[rad, x] && 
-     SquareFreeQ[rad, x] := Module[{eval = OptionValue[Evaluate], n, g, alg, trans, coef, r}, n = Exponent[rad, x]; g = Ceiling[n/2] - 1; 
-     {alg, trans} = {0, PolynomialQuotient[Numerator[rat], Denominator[rat], x]}; 
+     SquareFreeQ[rad, x] := Module[{eval = OptionValue[Evaluate], nume, deno, n, g, alg, trans, coef, r}, 
+    {nume, deno} = NumeratorDenominator[Together[rat]]; n = Exponent[rad, x]; g = Ceiling[n/2] - 1; {alg, trans} = {0, PolynomialQuotient[nume, deno, x]}; 
      Do[coef = Residue[rat, {x, y}]; r = Collect[Sum[x^(2*(g + 1) - k)*Coefficient[rad, x, k]*(1 + y*x)^k, {k, 0, n}], x]; 
-       {alg, trans} += ({(-coef)*#1*If[eval, ReplaceAll, IntegrateCFReplace][Log[#2 + #3*Sqrt[r]], x -> 1/(x - y)], 
-           coef*Sum[Coefficient[#4, x, k]*(x - y)^(g - 1 - k), {k, 0, g - 1}]} & ) @@ IntegrateCFImpl[x^g, r, x, opts]; , 
-      {y, PolynomialRoots[Denominator[rat], x]}]; alg + IntegrateCF[Simplify[trans]/Sqrt[rad], x]]; 
+       {alg, trans} += ({(-RootReduce[coef*#1])*If[eval, ReplaceAll, IntegrateCFReplace][Log[#2 + #3*Sqrt[r]], x -> 1/(x - y)], 
+           coef*Sum[Coefficient[#4, x, k]*(x - y)^(g - 1 - k), {k, 0, g - 1}]} & ) @@ IntegrateCFImpl[x^g, r, x, opts]; , {y, PolynomialRoots[deno, x]}]; 
+     alg + IntegrateCF[RootReduce[Collect[trans, x]]/Sqrt[rad], x]]; 
 
 
 (* ::Section:: *)
