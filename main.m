@@ -308,7 +308,7 @@ ContinuedFractionExpand[f_, {x_Symbol, n_Integer}] := Module[{a, b = f}, Quiet[T
 FromContinuedFractionExpand[list_List] := Fold[#2 + 1/#1 & , Reverse[list]]; 
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ContinuedFractionExpandPeriod*)
 
 
@@ -317,9 +317,8 @@ ContinuedFractionExpandPeriod::lim = "Iteration limit of `1` exceeded.";
 ContinuedFractionExpandPeriod[Sqrt[rad_], x_Symbol, OptionsPattern[]] /; PolynomialQ[rad, x] && SquareFreeQ[rad, x] := 
    Module[{lim = OptionValue[MaxIterations], r, n, a, b, c}, n = Exponent[rad, x]; r = PolynomialReverse[rad, x, n]; {a, b} = {0, 1}; 
      Reap[Do[If[i == lim, Message[ContinuedFractionExpandPeriod::lim, lim]; Abort[]]; c = Normal[Series[a + b*Sqrt[r], {x, 0, n/2}]]; 
-         If[Head[c] === Piecewise, c = SelectFirst[{Sequence @@ c[[1,All,1]], c[[2]]},  !PossibleZeroQ[#1] & ]; ]; 
-         If[i > 1 &&  !PossibleZeroQ[Coefficient[c, x, 0]], Break[], Sow[PolynomialReverse[c, x, n/2]]]; 
-         {a, b} = Simplify[(x^n*{a - c, -b})/((a - c)^2 - b^2*r)]; , {i, Infinity}]][[2,1]]]; 
+         If[Head[c] === Piecewise, c = SelectFirst[c[[1,All,1]], Not @* PossibleZeroQ, c[[2]]]; ]; If[i > 1 &&  !PossibleZeroQ[Coefficient[c, x, 0]], Break[], 
+          Sow[PolynomialReverse[c, x, n/2]]]; {a, b} = Simplify[(x^n*{a - c, -b})/((a - c)^2 - b^2*r)]; , {i, Infinity}]][[2,1]]]; 
 
 
 (* ::Subsection::Closed:: *)
