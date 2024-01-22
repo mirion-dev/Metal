@@ -317,6 +317,7 @@ ContinuedFractionExpandPeriod::lim = "Iteration limit of `1` exceeded.";
 ContinuedFractionExpandPeriod[Sqrt[rad_], x_Symbol, OptionsPattern[]] /; PolynomialQ[rad, x] && SquareFreeQ[rad, x] := 
    Module[{lim = OptionValue[MaxIterations], r, n, a, b, c}, n = Exponent[rad, x]; r = PolynomialReverse[rad, x, n]; {a, b} = {0, 1}; 
      Reap[Do[If[i == lim, Message[ContinuedFractionExpandPeriod::lim, lim]; Abort[]]; c = Normal[Series[a + b*Sqrt[r], {x, 0, n/2}]]; 
+         If[Head[c] === Piecewise, c = SelectFirst[{Sequence @@ c[[1,All,1]], c[[2]]},  !PossibleZeroQ[#1] & ]; ]; 
          If[i > 1 &&  !PossibleZeroQ[Coefficient[c, x, 0]], Break[], Sow[PolynomialReverse[c, x, n/2]]]; 
          {a, b} = Simplify[(x^n*{a - c, -b})/((a - c)^2 - b^2*r)]; , {i, Infinity}]][[2,1]]]; 
 
@@ -375,16 +376,23 @@ BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid
 (*IntegrateCF*)
 
 
-Options[IntegrateCF] = {MaxIterations -> 100, WorkingPrecision -> Infinity}; 
+Options[IntegrateCFImpl] = Options[IntegrateCF] = {WorkingPrecision -> Automatic, Sequence @@ Options[ContinuedFractionExpandPeriod], 
+     Sequence @@ Options[PolynomialFit]}; 
+IntegrateCFImpl[poly_, rad_, x_, opts:OptionsPattern[]] := Module[{prec = OptionValue[WorkingPrecision], 
+     opts1 = FilterRules[{opts}, Options[ContinuedFractionExpandPeriod]], opts2 = FilterRules[{opts}, Options[PolynomialFit]], r, g, p, q, alg, coef}, 
+    If[prec === Automatic, prec = If[FreeQ[{poly, rad}, Root], Infinity, 100]]; r = N[rad, prec]; g = Exponent[r, x]/2 - 1; 
+     {p, q} = NumeratorDenominator[Together[FromContinuedFractionExpand[ContinuedFractionExpandPeriod[Sqrt[r], x, opts1]]]]; 
+     alg = If[prec === Infinity, Cancel, PolynomialFit[#1, x, g, opts2] & ][D[p, x]/q]; coef = Coefficient[poly, x, g]/Coefficient[alg, x, g]; 
+     If[prec === Infinity, Simplify, PolynomialRootApproximant[#1, x] & ][{coef, p, q, poly - coef*alg}]]; 
 IntegrateCF[0, x_Symbol] := 0; 
-IntegrateCF[(poly_)/Sqrt[rad_], x_Symbol, OptionsPattern[]] /; PolynomialQ[poly, x] && PolynomialQ[rad, x] && SquareFreeQ[rad, x] := 
-   Module[{lim = OptionValue[MaxIterations], prec = OptionValue[WorkingPrecision], r, n, g, p, q, alg, coef, trans}, 
-    r = N[rad, prec]; n = Exponent[rad, x]; g = n/2 - 1; 
-     ({p, q} = NumeratorDenominator[Together[FromContinuedFractionExpand[ContinuedFractionExpandPeriod[Sqrt[r], x, MaxIterations -> lim]]]]; 
-       alg = If[NumericQ[prec], PolynomialFit[#1, x, g] & , Simplify][Sqrt[r]*D[Log[p + q*Sqrt[r]], x]]; 
-       coef = Simplify[Coefficient[poly, x, g]/Coefficient[alg, x, g]]; trans = Simplify[poly - coef*alg]; 
-       If[NumericQ[prec], coef //= RootApproximant; {p, q, trans} //= PolynomialRootApproximant[#1, x] & ; ]; 
-       coef*Log[p + q*Sqrt[rad]] + IntegrateCF[trans/Sqrt[rad], x]) /;  !PossibleZeroQ[Coefficient[poly, x, g]]]; 
+IntegrateCF[(poly_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /; PolynomialQ[poly, x] &&  !PossibleZeroQ[Coefficient[poly, x, Exponent[rad, x]/2 - 1]] && 
+     PolynomialQ[rad, x] && SquareFreeQ[rad, x] := (#1*Log[#2 + #3*Sqrt[rad]] + IntegrateCF[#4/Sqrt[rad], x] & ) @@ IntegrateCFImpl[poly, rad, x, opts]; 
+IntegrateCF[(rat_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /;  !PolynomialQ[rat, x] && RationalExpressionQ[rat, x] && PolynomialQ[rad, x] && 
+     SquareFreeQ[rad, x] := Module[{n, g, alg, trans, coef, r}, n = Exponent[rad, x]; g = Ceiling[n/2] - 1; 
+     {alg, trans} = {0, PolynomialQuotient[Numerator[rat], Denominator[rat], x]}; 
+     Do[coef = Residue[rat, {x, y}]; r = Sum[x^(2*(g + 1) - k)*Coefficient[rad, x, k]*(1 + y*x)^k, {k, 0, n}]; 
+       {alg, trans} += ({(-coef)*#1*Log[#2 + #3*Sqrt[r]] /. x -> 1/(x - y), coef*Sum[Coefficient[#4, x, k]*(x - y)^(g - 1 - k), {k, 0, g - 1}]} & ) @@ 
+         IntegrateCFImpl[x^g, r, x, opts]; , {y, PolynomialRoots[Denominator[rat], x]}]; alg + IntegrateCF[RootReduce[trans]/Sqrt[rad], x]]; 
 
 
 (* ::Subsection::Closed:: *)
