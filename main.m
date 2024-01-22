@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
 (* ::Subsection::Closed:: *)
-(*Begin*)
+(*BeginPackage*)
 
 
 BeginPackage["Mirion`"]; 
@@ -13,7 +13,7 @@ ClearAll["`*"];
 
 
 (* ::Section:: *)
-(*Function*)
+(*Public*)
 
 
 TIMING::usage = "\
@@ -108,6 +108,15 @@ PolynomialReverse[poly,x] \:7ed9\:51fa\:591a\:9879\:5f0f poly \:7684\:53cd\:5411
 "
 
 
+IntegrateCF::usage = "\
+IntegrateCF[expr,x] \:4f7f\:7528\:8fde\:5206\:6570\:5c55\:5f00\:6cd5\:6c42 expr \:5173\:4e8e x \:7684\:79ef\:5206.
+"
+
+
+(* ::Section:: *)
+(*Experimental*)
+
+
 FindIdentities::usage = "\
 FindIdentities[expr1,expr2,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed9\:51fa\:5173\:4e8e expr1,expr2 \:7684\:6052\:7b49\:5f0f.
 ";
@@ -118,17 +127,16 @@ BivariablePlot[list,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:7ed8\:5236\:591a\:5143 li
 ";
 
 
-IntegrateCF::usage = "\
-IntegrateCF[expr,x] \:ff08\:5b9e\:9a8c\:6027\:ff09\:4f7f\:7528\:8fde\:5206\:6570\:5c55\:5f00\:6cd5\:6c42 expr \:5173\:4e8e x \:7684\:79ef\:5206.
-"
-
-
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Option*)
 
 
 GenerateConstant::usage = "GenerateConstant \:5173\:4e8e\:662f\:5426\:751f\:6210\:5e38\:6570\:7684\:9009\:9879"; 
 SimplifyFunction::usage = "SimplifyFunction \:5173\:4e8e\:5316\:7b80\:51fd\:6570\:7684\:9009\:9879"; 
+
+
+(* ::Subsection::Closed:: *)
+(*BeginPrivate*)
 
 
 Begin["`Private`"]; 
@@ -137,10 +145,6 @@ ClearAll["`*"];
 
 (* ::Chapter:: *)
 (*Definition*)
-
-
-(* ::Section:: *)
-(*Private*)
 
 
 (* ::Section:: *)
@@ -308,7 +312,7 @@ ContinuedFractionExpand[f_, {x_Symbol, n_Integer}] := Module[{a, b = f}, Quiet[T
 FromContinuedFractionExpand[list_List] := Fold[#2 + 1/#1 & , Reverse[list]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ContinuedFractionExpandPeriod*)
 
 
@@ -336,6 +340,33 @@ PolynomialFit[expr_, x_Symbol, n_Integer, OptionsPattern[]] := Module[{intf = Op
 
 PolynomialReverse[poly_, x_Symbol] /; PolynomialQ[poly, x] := FromDigits[CoefficientList[poly, x], x]; 
 PolynomialReverse[poly_, x_Symbol, n_Integer] /; PolynomialQ[poly, x] := FromDigits[PadRight[CoefficientList[poly, x], n + 1], x]; 
+
+
+(* ::Subsection::Closed:: *)
+(*IntegrateCF*)
+
+
+Options[IntegrateCFImpl] = Options[IntegrateCF] = {WorkingPrecision -> Automatic, Sequence @@ Options[ContinuedFractionExpandPeriod], 
+     Sequence @@ Options[PolynomialFit]}; 
+IntegrateCFReplace /: MakeBoxes[IntegrateCFReplace[expr_, repl_], form_] := 
+    (InterpretationBox[FrameBox[RowBox[{#1, "/.", #2}], RoundingRadius -> 5], expr /. repl] & ) @@ {MakeBoxes[expr, form], MakeBoxes[repl, form]}; 
+IntegrateCFImpl[poly_, rad_, x_, opts:OptionsPattern[]] := Module[{prec = OptionValue[WorkingPrecision], 
+     opts1 = FilterRules[{opts}, Options[ContinuedFractionExpandPeriod]], opts2 = FilterRules[{opts}, Options[PolynomialFit]], r, g, p, q, alg, coef}, 
+    If[prec === Automatic, prec = If[FreeQ[{poly, rad}, Root], Infinity, 100]]; r = N[rad, prec]; g = Exponent[r, x]/2 - 1; 
+     {p, q} = NumeratorDenominator[Together[FromContinuedFractionExpand[ContinuedFractionExpandPeriod[Sqrt[r], x, opts1]]]]; 
+     alg = If[prec === Infinity, Cancel, PolynomialFit[#1, x, g, opts2] & ][D[p, x]/q]; coef = Coefficient[poly, x, g]/Coefficient[alg, x, g]; 
+     If[prec === Infinity, Simplify, PolynomialRootApproximant[#1, x] & ][{coef, p, q, poly - coef*alg}]]; 
+IntegrateCF[_?PossibleZeroQ, x_Symbol] := 0; 
+IntegrateCF[(poly_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /; PolynomialQ[poly, x] && PolynomialQ[rad, x] && SquareFreeQ[rad, x] := 
+   Module[{n, g}, n = Exponent[rad, x]; g = n/2 - 1; (#1*Log[#2 + #3*Sqrt[rad]] + IntegrateCF[#4/Sqrt[rad], x] & ) @@ IntegrateCFImpl[poly, rad, x, opts] /; 
+       !PossibleZeroQ[Coefficient[poly, x, g]]]; 
+IntegrateCF[(rat_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /;  !PolynomialQ[rat, x] && RationalExpressionQ[rat, x] && PolynomialQ[rad, x] && 
+     SquareFreeQ[rad, x] := Module[{n, g, alg, trans, coef, r}, n = Exponent[rad, x]; g = Ceiling[n/2] - 1; 
+     {alg, trans} = {0, PolynomialQuotient[Numerator[rat], Denominator[rat], x]}; 
+     Do[coef = Residue[rat, {x, y}]; r = Collect[Sum[x^(2*(g + 1) - k)*Coefficient[rad, x, k]*(1 + y*x)^k, {k, 0, n}], x]; 
+       {alg, trans} += ({(-coef)*#1*IntegrateCFReplace[Log[#2 + #3*Sqrt[r]], x -> 1/(x - y)], coef*Sum[Coefficient[#4, x, k]*(x - y)^(g - 1 - k), 
+             {k, 0, g - 1}]} & ) @@ IntegrateCFImpl[x^g, r, x, opts]; , {y, PolynomialRoots[Denominator[rat], x]}]; 
+     alg + IntegrateCF[Simplify[trans]/Sqrt[rad], x]]; 
 
 
 (* ::Section:: *)
@@ -371,34 +402,15 @@ BivariablePlot[list_List, x_Symbol, OptionsPattern[]] := Module[{labels, isValid
       PlotRangePadding -> Scaled[0.1]]]; 
 
 
-(* ::Subsection:: *)
-(*IntegrateCF*)
-
-
-Options[IntegrateCFImpl] = Options[IntegrateCF] = {WorkingPrecision -> Automatic, Sequence @@ Options[ContinuedFractionExpandPeriod], 
-     Sequence @@ Options[PolynomialFit]}; 
-IntegrateCFImpl[poly_, rad_, x_, opts:OptionsPattern[]] := Module[{prec = OptionValue[WorkingPrecision], 
-     opts1 = FilterRules[{opts}, Options[ContinuedFractionExpandPeriod]], opts2 = FilterRules[{opts}, Options[PolynomialFit]], r, g, p, q, alg, coef}, 
-    If[prec === Automatic, prec = If[FreeQ[{poly, rad}, Root], Infinity, 100]]; r = N[rad, prec]; g = Exponent[r, x]/2 - 1; 
-     {p, q} = NumeratorDenominator[Together[FromContinuedFractionExpand[ContinuedFractionExpandPeriod[Sqrt[r], x, opts1]]]]; 
-     alg = If[prec === Infinity, Cancel, PolynomialFit[#1, x, g, opts2] & ][D[p, x]/q]; coef = Coefficient[poly, x, g]/Coefficient[alg, x, g]; 
-     If[prec === Infinity, Simplify, PolynomialRootApproximant[#1, x] & ][{coef, p, q, poly - coef*alg}]]; 
-IntegrateCF[0, x_Symbol] := 0; 
-IntegrateCF[(poly_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /; PolynomialQ[poly, x] &&  !PossibleZeroQ[Coefficient[poly, x, Exponent[rad, x]/2 - 1]] && 
-     PolynomialQ[rad, x] && SquareFreeQ[rad, x] := (#1*Log[#2 + #3*Sqrt[rad]] + IntegrateCF[#4/Sqrt[rad], x] & ) @@ IntegrateCFImpl[poly, rad, x, opts]; 
-IntegrateCF[(rat_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /;  !PolynomialQ[rat, x] && RationalExpressionQ[rat, x] && PolynomialQ[rad, x] && 
-     SquareFreeQ[rad, x] := Module[{n, g, alg, trans, coef, r}, n = Exponent[rad, x]; g = Ceiling[n/2] - 1; 
-     {alg, trans} = {0, PolynomialQuotient[Numerator[rat], Denominator[rat], x]}; 
-     Do[coef = Residue[rat, {x, y}]; r = Sum[x^(2*(g + 1) - k)*Coefficient[rad, x, k]*(1 + y*x)^k, {k, 0, n}]; 
-       {alg, trans} += ({(-coef)*#1*Log[#2 + #3*Sqrt[r]] /. x -> 1/(x - y), coef*Sum[Coefficient[#4, x, k]*(x - y)^(g - 1 - k), {k, 0, g - 1}]} & ) @@ 
-         IntegrateCFImpl[x^g, r, x, opts]; , {y, PolynomialRoots[Denominator[rat], x]}]; alg + IntegrateCF[RootReduce[trans]/Sqrt[rad], x]]; 
-
-
 (* ::Subsection::Closed:: *)
-(*End*)
+(*EndPrivate*)
 
 
 End[];
+
+
+(* ::Subsection::Closed:: *)
+(*EndPackage*)
 
 
 EndPackage[];
