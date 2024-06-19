@@ -1,3 +1,4 @@
 (* ::Package:: *)
 
-Get["Mirion/main.m"]; 
+Get["Metal/main.m"]; 
+Get["Metal/trad.m"]; 

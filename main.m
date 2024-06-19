@@ -1,10 +1,10 @@
 (* ::Package:: *)
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*BeginPackage*)
 
 
-BeginPackage["Mirion`"]; 
+BeginPackage["Metal`"]; 
 ClearAll["`*"]; 
 
 
