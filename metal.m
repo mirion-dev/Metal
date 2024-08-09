@@ -152,7 +152,7 @@ PassOptions[from_, to_, opts:OptionsPattern[]] := Sequence @@ FilterRules[Gather
 
 
 Attributes[ExpressionPivot] = {Listable}; 
-ExpressionPivot[expr_] := Module[{}, Do[If[ !FreeQ[expr, i], Return[i]], {i, {x, y, t}}]; FirstCase[expr, _Symbol?( !NumericQ[#1] & ), Symbol, {-1}]]; 
+ExpressionPivot[expr_] := Catch[Do[If[ !FreeQ[expr, i], Throw[i]], {i, ToExpression["{x,y,t}"]}]; FirstCase[expr, _Symbol?( !NumericQ[#1] & ), Symbol, {-1}]]; 
 
 
 (* ::Subsection::Closed:: *)
@@ -242,7 +242,7 @@ IBS[f_, {a_, b_}, (ex_) == (t_Symbol), x_Symbol, opts:OptionsPattern[]] := IBS[f
 IBS[f_, {a_, b_}, (ex_) == (et_), opts:OptionsPattern[]] := IBS[f, {a, b}, ex == et, ExpressionPivot[ex], ExpressionPivot[et], opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ApartArcTan*)
 
 
