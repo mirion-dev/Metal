@@ -224,8 +224,8 @@ IBP[f_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := IBP[f, x, {x, a, b}, opts]
 (*IBS*)
 
 
-Options[IBS] = {Assumptions -> $Assumptions, Inactive -> False}; 
-IBS[f_, ex == (et_), x_Symbol, t_Symbol, opts:OptionsPattern[]] /; FreeQ[ex, t] &&  !FreeQ[ex, x] && FreeQ[et, x] &&  !FreeQ[et, t] := 
+Options[IBS] = {Assumptions -> $Assumptions}; 
+IBS[f_, (ex_) == (et_), x_Symbol, t_Symbol, opts:OptionsPattern[]] /; FreeQ[ex, t] &&  !FreeQ[ex, x] && FreeQ[et, x] &&  !FreeQ[et, t] := 
    Module[{u, result, c, r}, 
     result = If[ex === x, f /. x -> et, First[IntegrateChangeVariables[Inactive[Integrate][f, x], u, u == ex, PassOptions[IBS, IntegrateChangeVariables, opts]]] /. 
           C[_] -> 0 /. u -> et]*D[et, t]; {c, r} = CoefficientSeparation[Together[result], t]; c*Inactive[Integrate][r, t]]; 
