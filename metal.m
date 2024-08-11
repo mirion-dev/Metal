@@ -59,18 +59,18 @@ TraditionalForm]\) \:7684\:5206\:90e8\:79ef\:5206.";
 
 
 IBS::usage = "\
-IBS[f,ex->et] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:6362\:5143 ex->et \:540e\:7684\:7ed3\:679c.
-IBS[f,x->et,t] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:6362\:5143 x->et \:540e\:7684\:7ed3\:679c.
-IBS[f,ex->t,x] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:6362\:5143 ex->t \:540e\:7684\:7ed3\:679c.
-IBS[f,ex->et,x,t] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:6362\:5143 ex->et \:540e\:7684\:7ed3\:679c.
-IBS[f,{a,b},ex->et] \:7ed9\:51fa \!\(\*FormBox[\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]f \[DifferentialD]x\),
-TraditionalForm]\) \:6362\:5143 ex->et \:540e\:7684\:7ed3\:679c.
-IBS[f,{a,b},x->et,t] \:7ed9\:51fa \!\(\*FormBox[\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]f \[DifferentialD]x\),
-TraditionalForm]\) \:6362\:5143 x->et \:540e\:7684\:7ed3\:679c.
-IBS[f,{a,b},ex->t,x] \:7ed9\:51fa \!\(\*FormBox[\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]f \[DifferentialD]x\),
-TraditionalForm]\) \:6362\:5143 ex->t \:540e\:7684\:7ed3\:679c.
-IBS[f,{a,b},ex->et,x,t] \:7ed9\:51fa \!\(\*FormBox[\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]f \[DifferentialD]x\),
-TraditionalForm]\) \:6362\:5143 ex->et \:540e\:7684\:7ed3\:679c.";
+IBS[f,ex==et] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:6362\:5143 ex==et \:540e\:7684\:7ed3\:679c.
+IBS[f,x==et,t] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:6362\:5143 x==et \:540e\:7684\:7ed3\:679c.
+IBS[f,ex==t,x] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:6362\:5143 ex==t \:540e\:7684\:7ed3\:679c.
+IBS[f,ex==et,x,t] \:7ed9\:51fa \[Integral]f \[DifferentialD]x \:6362\:5143 ex==et \:540e\:7684\:7ed3\:679c.
+IBS[f,{a,b},ex==et] \:7ed9\:51fa \!\(\*FormBox[\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]f \[DifferentialD]x\),
+TraditionalForm]\) \:6362\:5143 ex==et \:540e\:7684\:7ed3\:679c.
+IBS[f,{a,b},x==et,t] \:7ed9\:51fa \!\(\*FormBox[\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]f \[DifferentialD]x\),
+TraditionalForm]\) \:6362\:5143 x==et \:540e\:7684\:7ed3\:679c.
+IBS[f,{a,b},ex==t,x] \:7ed9\:51fa \!\(\*FormBox[\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]f \[DifferentialD]x\),
+TraditionalForm]\) \:6362\:5143 ex==t \:540e\:7684\:7ed3\:679c.
+IBS[f,{a,b},ex==et,x,t] \:7ed9\:51fa \!\(\*FormBox[\(\*SubsuperscriptBox[\(\[Integral]\), \(a\), \(b\)]f \[DifferentialD]x\),
+TraditionalForm]\) \:6362\:5143 ex==et \:540e\:7684\:7ed3\:679c.";
 
 
 ApartArcTan::usage = "\
@@ -220,7 +220,7 @@ IBP[u_, v_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := Module[{c, r, optLimit
 IBP[f_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := IBP[f, x, {x, a, b}, opts]; 
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*IBS*)
 
 
@@ -228,7 +228,7 @@ Options[IBS] = {Assumptions -> $Assumptions};
 IBS[f_, (ex_) == (et_), x_Symbol, t_Symbol, opts:OptionsPattern[]] /; FreeQ[ex, t] &&  !FreeQ[ex, x] && FreeQ[et, x] &&  !FreeQ[et, t] := 
    Module[{u, result, c, r}, 
     result = If[ex === x, f /. x -> et, First[IntegrateChangeVariables[Inactive[Integrate][f, x], u, u == ex, PassOptions[IBS, IntegrateChangeVariables, opts]]] /. 
-          C[_] -> 0 /. u -> et]*D[et, t]; {c, r} = CoefficientSeparation[Together[result], t]; c*Inactive[Integrate][r, t]]; 
+          C[_] -> 0 /. u -> et]*D[et, t]; result]; 
 IBS[f_, (x_Symbol) == (et_), t_Symbol, opts:OptionsPattern[]] := IBS[f, x == et, x, t, opts]; 
 IBS[f_, (ex_) == (t_Symbol), x_Symbol, opts:OptionsPattern[]] := IBS[f, ex == t, x, t, opts]; 
 IBS[f_, (ex_) == (et_), opts:OptionsPattern[]] := IBS[f, ex == et, ExpressionPivot[ex], ExpressionPivot[et], opts]; 
