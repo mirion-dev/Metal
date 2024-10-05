@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
 (* ::Subsection::Closed:: *)
-(*BeginPackage*)
+(*[BeginPackage]*)
 
 
 BeginPackage["Metal`"]; 
@@ -116,12 +116,16 @@ IntegrateCF::usage = "\
 IntegrateCF[expr,x] \:4f7f\:7528\:8fde\:5206\:6570\:5c55\:5f00\:6cd5\:6c42 expr \:5173\:4e8e x \:7684\:4e0d\:5b9a\:79ef\:5206.";
 
 
+FastComplexPlot3D::usage = "\
+FastComplexPlot3D[f,{x,xmin,xmax},n] \:751f\:6210\:51fd\:6570 f \:5173\:4e8e x \:7684\:4e09\:7ef4\:590d\:5e73\:9762\:7ed8\:56fe.";
+
+
 GenerateConstant::usage = "GenerateConstant \:5173\:4e8e\:662f\:5426\:751f\:6210\:5e38\:6570\:7684\:9009\:9879"; 
 SimplifyFunction::usage = "SimplifyFunction \:5173\:4e8e\:5316\:7b80\:51fd\:6570\:7684\:9009\:9879"; 
 
 
 (* ::Subsection::Closed:: *)
-(*BeginPrivate*)
+(*[BeginPrivate]*)
 
 
 Begin["`Private`"]; 
@@ -220,7 +224,7 @@ IBP[u_, v_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := Module[{c, r, optLimit
 IBP[f_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := IBP[f, x, {x, a, b}, opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*IBS*)
 
 
@@ -360,15 +364,28 @@ IntegrateCF[(rat_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /;  !PolynomialQ
      alg + IntegrateCF[RootReduce[Collect[trans, x]]/Sqrt[rad], x]]; 
 
 
+(* ::Subsection:: *)
+(*FastComplexPlot3D*)
+
+
+Options[FastComplexPlot3D] = Join[{Mesh -> None, AxesLabel -> {Re, Im}, Chop -> 10^(-15)}, Options[ListPlot3D]]; 
+FastComplexPlot3D[fn_, {z_Symbol, zmin_, zmax_}, n_Integer, opts:OptionsPattern[]] /; n > 0 := Module[{f, rmin, rmax, imin, imax, data, colorf, ticks}, 
+    {rmin, imin} = ReIm[N[zmin]]; {rmax, imax} = ReIm[N[zmax]]; f = Function[z, (If[NumericQ[#1], Chop[#1, OptionValue[Chop]], Indeterminate] & )[N[fn]]]; 
+     data = Quiet[Table[f[a + b*I], {a, rmin, rmax, (rmax - rmin)/n}, {b, imin, imax, (imax - imin)/n}]]; 
+     colorf = Function[{x, y}, Hue[Arg[data[[Round[n*x + 1],Round[n*y + 1]]]]/(2*Pi), 0.75]]; 
+     ticks = Table[{(n*i)/4 + 1, (If[Abs[#1 - Round[#1]] < OptionValue[Chop], Round[#1], #1] & )[rmin + ((rmax - rmin)/4)*i]}, {i, 0, 4}]; 
+     ListPlot3D[Map[Abs, Transpose[data], {2}], ColorFunction -> colorf, Ticks -> {ticks, ticks, Automatic}, PassOptions[FastComplexPlot3D, ListPlot3D, opts]]]; 
+
+
 (* ::Subsection::Closed:: *)
-(*EndPrivate*)
+(*[EndPrivate]*)
 
 
 End[];
 
 
 (* ::Subsection::Closed:: *)
-(*EndPackage*)
+(*[EndPackage]*)
 
 
 EndPackage[];
