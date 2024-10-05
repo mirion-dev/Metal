@@ -8,7 +8,7 @@ BeginPackage["Metal`"];
 ClearAll["`*"]; 
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Usage*)
 
 
@@ -368,7 +368,7 @@ IntegrateCF[(rat_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /;  !PolynomialQ
 (*FastComplexPlot3D*)
 
 
-Options[FastComplexPlot3D] = Join[{Mesh -> None, AxesLabel -> {Re, Im}, Chop -> 10^(-15)}, Options[ListPlot3D]]; 
+Options[FastComplexPlot3D] = Join[{Mesh -> None, AxesLabel -> {Re, Im}, InterpolationOrder -> 0, Chop -> 10^(-10)}, Options[ListPlot3D]]; 
 FastComplexPlot3D[fn_, {z_Symbol, zmin_, zmax_}, n_Integer, opts:OptionsPattern[]] /; n > 0 := Module[{f, rmin, rmax, imin, imax, data, colorf, ticks}, 
     {rmin, imin} = ReIm[N[zmin]]; {rmax, imax} = ReIm[N[zmax]]; f = Function[z, (If[NumericQ[#1], Chop[#1, OptionValue[Chop]], Indeterminate] & )[N[fn]]]; 
      data = Quiet[Table[f[a + b*I], {a, rmin, rmax, (rmax - rmin)/n}, {b, imin, imax, (imax - imin)/n}]]; 
