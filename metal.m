@@ -368,13 +368,16 @@ IntegrateCF[(rat_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /;  !PolynomialQ
 (*FastComplexPlot3D*)
 
 
-Options[FastComplexPlot3D] = Join[{Mesh -> None, AxesLabel -> {Re, Im}, InterpolationOrder -> 0, Chop -> 10^(-10)}, Options[ListPlot3D]]; 
-FastComplexPlot3D[fn_, {z_Symbol, zmin_, zmax_}, n_Integer, opts:OptionsPattern[]] /; n > 0 := Module[{f, rmin, rmax, imin, imax, data, colorf, ticks}, 
-    {rmin, imin} = ReIm[N[zmin]]; {rmax, imax} = ReIm[N[zmax]]; f = Function[z, (If[NumericQ[#1], Chop[#1, OptionValue[Chop]], Indeterminate] & )[N[fn]]]; 
+Options[FastComplexPlot3D] = Join[{Mesh -> None, AxesLabel -> {Re, Im}, InterpolationOrder -> 0, Chop -> 10^(-10), DiscretePlot -> True}, Options[ListPlot3D]]; 
+FastComplexPlot3D[fn_, {z_Symbol, zmin_, zmax_}, n_Integer, opts:OptionsPattern[]] /; n > 0 := 
+   Module[{delta, rmin, rmax, imin, imax, f, data, colorf, cnt, cur, colorfd, ticks}, delta = OptionValue[Chop]; {rmin, imin} = ReIm[N[zmin]]; 
+     {rmax, imax} = ReIm[N[zmax]]; f = Function[z, (If[NumericQ[#1], Chop[#1, delta], Indeterminate] & )[N[fn]]]; 
      data = Quiet[Table[f[a + b*I], {a, rmin, rmax, (rmax - rmin)/n}, {b, imin, imax, (imax - imin)/n}]]; 
-     colorf = Function[{x, y}, Hue[Arg[data[[Round[n*x + 1],Round[n*y + 1]]]]/(2*Pi), 0.75]]; 
-     ticks = Table[{(n*i)/4 + 1, (If[Abs[#1 - Round[#1]] < OptionValue[Chop], Round[#1], #1] & )[rmin + ((rmax - rmin)/4)*i]}, {i, 0, 4}]; 
-     ListPlot3D[Map[Abs, Transpose[data], {2}], ColorFunction -> colorf, Ticks -> {ticks, ticks, Automatic}, PassOptions[FastComplexPlot3D, ListPlot3D, opts]]]; 
+     colorf = Function[{x, y}, Hue[Arg[data[[Round[n*x + 1],Round[n*y + 1]]]]/(2*Pi), 0.75]]; cnt = 0; 
+     colorfd = Function[{x, y}, If[Mod[cnt++, 4] == 0, cur = data[[Round[n*x + 1],Round[n*y + 1]]]]; Hue[Arg[cur]/(2*Pi), 0.75]]; 
+     ticks = Table[{(n*i)/4 + 1, (If[Abs[#1 - Round[#1]] < delta, Round[#1], #1] & )[rmin + ((rmax - rmin)/4)*i]}, {i, 0, 4}]; 
+     ListPlot3D[Map[Abs, Transpose[data], {2}], ColorFunction -> If[OptionValue[DiscretePlot], colorfd, colorf], Ticks -> {ticks, ticks, Automatic}, 
+      PassOptions[FastComplexPlot3D, ListPlot3D, opts]]]; 
 
 
 (* ::Subsection::Closed:: *)
