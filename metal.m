@@ -368,10 +368,11 @@ IntegrateCF[(rat_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /;  !PolynomialQ
 (*FastComplexPlot3D*)
 
 
-Options[FastComplexPlot3D] = Join[{Mesh -> None, AxesLabel -> {Re, Im}, InterpolationOrder -> 0, Chop -> 10^(-10), DiscretePlot -> True}, Options[ListPlot3D]]; 
+Options[FastComplexPlot3D] = Join[{Mesh -> None, AxesLabel -> {Re, Im}, InterpolationOrder -> 0, WorkingPrecision -> MachinePrecision, Chop -> 10^(-10), 
+     DiscretePlot -> True}, Options[ListPlot3D]]; 
 FastComplexPlot3D[fn_, {z_Symbol, zmin_, zmax_}, n_Integer, opts:OptionsPattern[]] /; n > 0 := 
-   Module[{delta, rmin, rmax, imin, imax, f, data, colorf, cnt, cur, colorfd, ticks}, delta = OptionValue[Chop]; {rmin, imin} = ReIm[N[zmin]]; 
-     {rmax, imax} = ReIm[N[zmax]]; f = Function[z, (If[NumericQ[#1], Chop[#1, delta], Indeterminate] & )[N[fn]]]; 
+   Module[{delta, prec, rmin, rmax, imin, imax, f, data, colorf, cnt, cur, colorfd, ticks}, delta = OptionValue[Chop]; prec = OptionValue[WorkingPrecision]; 
+     {rmin, imin} = ReIm[N[zmin, prec]]; {rmax, imax} = ReIm[N[zmax, prec]]; f = Function[z, (If[NumericQ[#1], Chop[#1, delta], Indeterminate] & )[N[fn, prec]]]; 
      data = Quiet[Table[f[a + b*I], {a, rmin, rmax, (rmax - rmin)/n}, {b, imin, imax, (imax - imin)/n}]]; 
      colorf = Function[{x, y}, Hue[Arg[data[[Round[n*x + 1],Round[n*y + 1]]]]/(2*Pi), 0.75]]; cnt = 0; 
      colorfd = Function[{x, y}, If[Mod[cnt++, 4] == 0, cur = data[[Round[n*x + 1],Round[n*y + 1]]]]; Hue[Arg[cur]/(2*Pi), 0.75]]; 
