@@ -151,7 +151,7 @@ TIMING[code_, n_Integer:1] := Module[{}, ClearSystemCache[]; AbsoluteTiming[Do[c
 PassOptions[from_, to_, opts:OptionsPattern[]] := Sequence @@ FilterRules[GatherBy[{opts, Sequence @@ Options[from]}, First][[All,1]], Options[to]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ExpressionPivot*)
 
 
@@ -199,9 +199,8 @@ PolynomialRoots[poly_, x_Symbol, opts:OptionsPattern[]] /; PolynomialQ[poly, x] 
 (*PolynomialRootApproximant*)
 
 
-Options[PolynomialFit] = {InterpolatingFunction -> (RandomReal[#1, WorkingPrecision -> 100] & )}; 
-PolynomialFit[expr_, x_Symbol, n_Integer, OptionsPattern[]] := Module[{func = OptionValue[InterpolatingFunction]}, 
-    InterpolatingPolynomial[Table[({#1, expr /. x -> #1} & )[func[i]], {i, n + 1}], x]]; 
+Attributes[PolynomialRootApproximant] = {Listable}; 
+PolynomialRootApproximant[poly_, x_Symbol] /; PolynomialQ[poly, x] := FromDigits[RootApproximant /@ Reverse[CoefficientList[poly, x]], x]; 
 
 
 (* ::Subsection::Closed:: *)
@@ -365,7 +364,7 @@ IntegrateCF[(rat_)/Sqrt[rad_], x_Symbol, opts:OptionsPattern[]] /;  !PolynomialQ
      alg + IntegrateCF[RootReduce[Collect[trans, x]]/Sqrt[rad], x]]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FastComplexPlot3D*)
 
 
