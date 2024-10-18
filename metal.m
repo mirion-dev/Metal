@@ -151,12 +151,13 @@ TIMING[code_, n_Integer:1] := Module[{}, ClearSystemCache[]; AbsoluteTiming[Do[c
 PassOptions[from_, to_, opts:OptionsPattern[]] := Sequence @@ FilterRules[GatherBy[{opts, Sequence @@ Options[from]}, First][[All,1]], Options[to]]; 
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ExpressionPivot*)
 
 
 Attributes[ExpressionPivot] = {Listable}; 
-ExpressionPivot[expr_] := Catch[Do[If[ !FreeQ[expr, i], Throw[i]], {i, ToExpression["{x,y,t}"]}]; FirstCase[expr, _Symbol?( !NumericQ[#1] & ), Symbol, {-1}]]; 
+ExpressionPivot[expr_] := Catch[Do[If[ !FreeQ[expr, i], Throw[i]], {i, ToExpression["{x,y,z,u,v,w,t}"]}]; FirstCase[expr, _Symbol?( !NumericQ[#1] & ), Symbol, 
+      {-1}]]; 
 
 
 (* ::Subsection::Closed:: *)
