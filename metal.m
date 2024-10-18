@@ -377,7 +377,7 @@ FastComplexPlot3D[fn_, {z_Symbol, zmin_, zmax_}, n_Integer, opts:OptionsPattern[
      data = Quiet[Table[f[a + b*I], {a, rmin, rmax, (rmax - rmin)/n}, {b, imin, imax, (imax - imin)/n}]]; 
      colorf = Function[{x, y}, Hue[Arg[data[[Round[n*x + 1],Round[n*y + 1]]]]/(2*Pi), 0.75]]; cnt = 0; 
      colorfd = Function[{x, y}, If[Mod[cnt++, 4] == 0, cur = data[[Round[n*x + 1],Round[n*y + 1]]]]; Hue[Arg[cur]/(2*Pi), 0.75]]; 
-     ticks = Table[{(n*i)/4 + 1, (If[Abs[#1 - Round[#1]] < delta, Round[#1], #1] & )[rmin + ((rmax - rmin)/4)*i]}, {i, 0, 4}]; 
+     ticks = Table[{(n*i)/4 + 1, (If[Abs[#1 - Round[#1]] < 0.01, Round[#1], #1] & )[Round[rmin + ((rmax - rmin)/4)*i, 0.01]]}, {i, 0, 4}]; 
      ListPlot3D[Map[Abs, Transpose[data], {2}], ColorFunction -> If[OptionValue[DiscretePlot], colorfd, colorf], Ticks -> {ticks, ticks, Automatic}, 
       PassOptions[FastComplexPlot3D, ListPlot3D, opts]]]; 
 
