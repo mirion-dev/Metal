@@ -136,12 +136,12 @@ ClearAll["`*"];
 (*Definition*)
 
 
-(* ::Subsection::Closed:: *)
-(*TIMING*)
+(* ::Subsection:: *)
+(*TimingTest*)
 
 
-Attributes[TIMING] = {HoldAll}; 
-TIMING[code_, n_Integer:1] := Module[{}, ClearSystemCache[]; AbsoluteTiming[Do[code, n - 1]; code]]; 
+Attributes[TimingTest] = {HoldAll}; 
+TimingTest[code_, n_Integer:1] := Module[{}, ClearSystemCache[]; AbsoluteTiming[Do[code, n - 1]; code]]; 
 
 
 (* ::Subsection::Closed:: *)
