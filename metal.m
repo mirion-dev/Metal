@@ -12,9 +12,9 @@ ClearAll["`*"];
 (*Usage*)
 
 
-TIMING::usage = "\
-TIMING[code] \:8fd4\:56de\:6267\:884c code \:6240\:82b1\:8d39\:7684\:65f6\:95f4\:548c\:7ed3\:679c.
-TIMING[code,n] \:8fd4\:56de\:6267\:884c code n \:6b21\:6240\:82b1\:8d39\:7684\:65f6\:95f4\:548c\:7ed3\:679c.";
+TimingTest::usage = "\
+TimingTest[code] \:8fd4\:56de\:6267\:884c code \:6240\:82b1\:8d39\:7684\:65f6\:95f4\:548c\:7ed3\:679c.
+TimingTest[code,n] \:8fd4\:56de\:6267\:884c code n \:6b21\:6240\:82b1\:8d39\:7684\:65f6\:95f4\:548c\:7ed3\:679c.";
 
 
 PassOptions::usage = "\
@@ -23,6 +23,10 @@ PassOptions[from,to,opts] \:5728 from \:548c to \:95f4\:4f20\:9012 opts.";
 
 ExpressionPivot::usage = "\
 ExpressionPivot[expr] \:8fd4\:56de expr \:4e2d\:9996\:4e2a\:975e\:6570\:503c\:7b26\:53f7.";
+
+
+AlgebraicExpressionQ::usage = "\
+AlgebraicExpressionQ[expr,x] \:8fd4\:56de expr \:662f\:5426\:4e3a\:4ee3\:6570\:8868\:8fbe\:5f0f.";
 
 
 CoefficientSeparation::usage = "\
@@ -136,7 +140,7 @@ ClearAll["`*"];
 (*Definition*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*TimingTest*)
 
 
@@ -158,6 +162,14 @@ PassOptions[from_, to_, opts:OptionsPattern[]] := Sequence @@ FilterRules[Gather
 Attributes[ExpressionPivot] = {Listable}; 
 ExpressionPivot[expr_] := Catch[Do[If[ !FreeQ[expr, i], Throw[i]], {i, ToExpression["{x,y,z,u,v,w,t}"]}]; FirstCase[expr, _Symbol?( !NumericQ[#1] & ), Symbol, 
       {-1}]]; 
+
+
+(* ::Subsection::Closed:: *)
+(*AlgebraicExpressionQ*)
+
+
+Attributes[AlgebraicExpressionQ] = {Listable}; 
+AlgebraicExpressionQ[expr_, x_Symbol] := Catch[RationalExpressionQ[expr /. Sqrt[a_] :> a /. (a_)^(b_) :> (If[ !FreeQ[b, x], Throw[False]]; a), x]]; 
 
 
 (* ::Subsection::Closed:: *)
@@ -224,15 +236,17 @@ IBP[u_, v_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := Module[{c, r, optLimit
 IBP[f_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := IBP[f, x, {x, a, b}, opts]; 
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*IBS*)
 
 
-Options[IBS] = {Assumptions -> $Assumptions}; 
+Options[IBS] = {Assumptions -> $Assumptions, Method -> Automatic}; 
 IBS[f_, (ex_) == (et_), x_Symbol, t_Symbol, opts:OptionsPattern[]] /; FreeQ[ex, t] &&  !FreeQ[ex, x] && FreeQ[et, x] &&  !FreeQ[et, t] := 
-   Module[{u, result, c, r}, 
-    result = If[ex === x, f /. x -> et, First[IntegrateChangeVariables[Inactive[Integrate][f, x], u, u == ex, PassOptions[IBS, IntegrateChangeVariables, opts]]] /. 
-          C[_] -> 0 /. u -> et]*D[et, t]; result]; 
+   Module[{u, result, g, optMethod = OptionValue[Method]}, 
+    result = If[ex === x, f /. x -> et, If[(optMethod === Automatic && AlgebraicExpressionQ[ex, x]) || optMethod === GroebnerBasis, 
+         Last[SolveValues[Factor[GroebnerBasis[{ex == u, g*D[ex, x] == f}, {x, u}, {x}]] == 0, g]] /. u -> et, 
+         First[IntegrateChangeVariables[Inactive[Integrate][f, x], u, u == ex, PassOptions[IBS, IntegrateChangeVariables, opts]]] /. C[_] -> 0 /. u -> et]]*
+       D[et, t]; result]; 
 IBS[f_, (x_Symbol) == (et_), t_Symbol, opts:OptionsPattern[]] := IBS[f, x == et, x, t, opts]; 
 IBS[f_, (ex_) == (t_Symbol), x_Symbol, opts:OptionsPattern[]] := IBS[f, ex == t, x, t, opts]; 
 IBS[f_, (ex_) == (et_), opts:OptionsPattern[]] := IBS[f, ex == et, ExpressionPivot[ex], ExpressionPivot[et], opts]; 
