@@ -236,7 +236,7 @@ IBP[u_, v_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := Module[{c, r, optLimit
 IBP[f_, {x_Symbol, a_, b_}, opts:OptionsPattern[]] := IBP[f, x, {x, a, b}, opts]; 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*IBS*)
 
 
@@ -244,8 +244,8 @@ Options[IBS] = {Assumptions -> $Assumptions, Method -> Automatic};
 IBS[f_, (ex_) == (et_), x_Symbol, t_Symbol, opts:OptionsPattern[]] /; FreeQ[ex, t] &&  !FreeQ[ex, x] && FreeQ[et, x] &&  !FreeQ[et, t] := 
    Module[{u, result, g, optMethod = OptionValue[Method]}, 
     result = If[ex === x, f /. x -> et, If[(optMethod === Automatic && AlgebraicExpressionQ[ex, x]) || optMethod === GroebnerBasis, 
-         Last[SolveValues[Factor[GroebnerBasis[{ex == u, g*D[ex, x] == f}, {x, u}, {x}]] == 0, g]] /. u -> et, 
-         First[IntegrateChangeVariables[Inactive[Integrate][f, x], u, u == ex, PassOptions[IBS, IntegrateChangeVariables, opts]]] /. C[_] -> 0 /. u -> et]]*
+          Last[SolveValues[Factor[GroebnerBasis[{ex == u, g*D[ex, x] == f}, {x, u}, {x}]] == 0, g]], 
+          First[IntegrateChangeVariables[Inactive[Integrate][f, x], u, u == ex, PassOptions[IBS, IntegrateChangeVariables, opts]]] /. C[_] -> 0] /. u -> et]*
        D[et, t]; result]; 
 IBS[f_, (x_Symbol) == (et_), t_Symbol, opts:OptionsPattern[]] := IBS[f, x == et, x, t, opts]; 
 IBS[f_, (ex_) == (t_Symbol), x_Symbol, opts:OptionsPattern[]] := IBS[f, ex == t, x, t, opts]; 
