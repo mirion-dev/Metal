@@ -144,12 +144,12 @@ IntegrateCF::usage = "\
 IntegrateCF[expr,x] \:4f7f\:7528\:8fde\:5206\:6570\:5c55\:5f00\:6cd5\:6c42 expr \:5173\:4e8e x \:7684\:4e0d\:5b9a\:79ef\:5206.";
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*\:4ee3\:6570\:66f2\:7ebf*)
 
 
 IgusaClebschInvariants::usage = "\
-IgusaClebschInvariants[poly,x] \:8fd4\:56de y^2=poly \:7684 Igusa-Clebsch \:4e0d\:53d8\:91cf."
+IgusaClebschInvariants[poly,x] \:8fd4\:56de y^2 = p(x) \:7684 Igusa-Clebsch \:4e0d\:53d8\:91cf\:ff08SageMath \:5b9a\:4e49\:ff09."
 
 
 (* ::Section::Closed:: *)
