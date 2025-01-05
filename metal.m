@@ -164,6 +164,10 @@ IgusaClebschInvariants::usage = "\
 IgusaClebschInvariants[poly,x] \:8fd4\:56de\:4e8f\:683c 2 \:66f2\:7ebf y^2 = p(x) \:7684 Igusa-Clebsch \:4e0d\:53d8\:91cf.";
 
 
+EllipticIntegralTransformOrder::usage = "\
+EllipticIntegralTransformOrder[poly,x] \:8fd4\:56de\:5c06\:4e8f\:683c 2 \:66f2\:7ebf y^2 = p(x) \:76f8\:5173\:8d85\:692d\:5706\:79ef\:5206\:53d8\:6362\:4e3a\:692d\:5706\:79ef\:5206\:9700\:8981\:7684\:9636\:6570";
+
+
 (* ::Section::Closed:: *)
 (*\:7ed8\:56fe*)
 
@@ -480,6 +484,29 @@ IgusaClebschI10[poly_, x_Symbol] := If[Exponent[poly, x] == 5, FirstCoefficient[
 Attributes[IgusaClebschInvariants] = {Listable}; 
 IgusaClebschInvariants[poly_, x_Symbol] /; PolynomialQ[poly, x] && 5 <= Exponent[poly, x] <= 6 := {IgusaClebschI2[poly, x], IgusaClebschI4[poly, x], 
     IgusaClebschI6[poly, x], IgusaClebschI10[poly, x]}; 
+
+
+(* ::Subsection::Closed:: *)
+(*EllipticIntegralTransformOrder*)
+
+
+Attributes[EllipticIntegralTransformOrder] = {Listable}; 
+EllipticIntegralTransformOrder[poly_, x_Symbol] /; PolynomialQ[poly, x] && 5 <= Exponent[poly, x] <= 6 := 
+   Module[{inv, solvable, r, s, \[Lambda]}, inv = IgusaClebschInvariants[poly, x]; solvable[equ_] := Length[NSolveValues[inv == equ, {r, s, \[Lambda]}, MaxRoots -> 1]] =!= 0; 
+     If[solvable[{((8*(r + 3*s))/r)*\[Lambda]^2, -4*(-1 + 3*r)*\[Lambda]^4, (-((4*(-2*r + 5*r^2 - 8*s + 6*r*s))/r))*\[Lambda]^6, 4*r*s*\[Lambda]^10}], Return[2]]; 
+     If[solvable[{8*(-2 + 4*s + s^2)*\[Lambda]^2, -4*(-1 - 192*r + 4*s + 48*r*s - 6*s^2 + 4*s^3 - s^4)*\[Lambda]^4, 
+        8*(-3 - 320*r - 288*r^2 + 18*s + 792*r*s - 41*s^2 + 144*r*s^2 + 44*s^3 - 40*r*s^3 - 21*s^4 + 2*s^5 + s^6)*\[Lambda]^6, 16384*r^3*\[Lambda]^10}], Return[3]]; 
+     If[solvable[{(-((2*(24*r^3 + 4*r^4 - 48*r^3*s + 2*r^4*s + 36*r^2*s^2 + 28*r^3*s^2 - 48*r^2*s^3 - 2*r^3*s^3 + 18*r*s^4 + 13*r^2*s^4 - 12*r*s^5 + 3*s^6))/
+           (r^2*(-2*r + 2*r*s - s^2))))*\[Lambda]^2, (1/4)*(r^2 + 48*r*s + 4*r*s^2 + 24*s^3 + s^4)*\[Lambda]^4, (-(1/(16*r^2*(-2*r + 2*r*s - s^2))))*
+         (208*r^5 + 12*r^6 + 3072*r^4*s + 480*r^5*s + 4*r^6*s - 5576*r^4*s^2 + 124*r^5*s^2 + 6144*r^3*s^3 + 3488*r^4*s^3 + 26*r^5*s^3 - 8612*r^3*s^4 - 
+          109*r^4*s^4 + 4608*r^2*s^5 + 3000*r^3*s^5 - 8*r^4*s^5 - 4294*r^2*s^6 - 16*r^3*s^6 + 1536*r*s^7 + 624*r^2*s^7 - 4*r^3*s^7 - 688*r*s^8 + 34*r^2*s^8 + 
+          192*s^9 - 32*r*s^9 + 8*s^10)*\[Lambda]^6, (-(1/256))*r^2*(-2*r + 2*r*s - s^2)*(2*r + s^2)*\[Lambda]^10}], Return[4]]; 
+     If[solvable[{2*(3 - 6*r + r^2 - 6*s + 22*r*s - 12*r^2*s + s^2 + 20*r*s^2 + 4*r^2*s^2)*\[Lambda]^2, (1/4)*(r^4 + 20*r^3*s - 24*r^4*s + 198*r^2*s^2 - 392*r^3*s^2 + 
+          56*r^4*s^2 - 220*r*s^3 + 904*r^2*s^3 - 976*r^3*s^3 + 96*r^4*s^3 + s^4 - 8*r*s^4 + 24*r^2*s^4 - 32*r^3*s^4 + 16*r^4*s^4)*\[Lambda]^4, 
+        (1/8)*(4*r^4 - 8*r^5 + r^6 + 80*r^3*s - 264*r^4*s + 238*r^5*s - 36*r^6*s + 792*r^2*s^2 - 3312*r^3*s^2 + 4543*r^4*s^2 - 2228*r^5*s^2 + 364*r^6*s^2 - 
+          880*r*s^3 + 3792*r^2*s^3 - 1732*r^3*s^3 - 7152*r^4*s^3 + 6192*r^5*s^3 - 896*r^6*s^3 + 4*s^4 + 1720*r*s^4 - 10769*r^2*s^4 + 30368*r^3*s^4 - 
+          35208*r^4*s^4 + 10304*r^5*s^4 - 1616*r^6*s^4 - 8*s^5 - 378*r*s^5 - 3692*r^2*s^5 + 18544*r^3*s^5 - 17120*r^4*s^5 - 4128*r^5*s^5 + 64*r^6*s^5 + s^6 + 
+          20*r*s^6 - 196*r^2*s^6 + 608*r^3*s^6 - 784*r^4*s^6 + 320*r^5*s^6 + 64*r^6*s^6)*\[Lambda]^6, -16*r^7*(-1 + 2*r)^2*s^5*\[Lambda]^10}], Return[5]]; False]; 
 
 
 (* ::Section:: *)
