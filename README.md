@@ -1,5 +1,5 @@
 > [!warning]
-> 需要 Mathematica 13.1 或更高的版本.
+> 部分功能需要 Mathematica 13.1 或更高的版本.
 
 ## 安装
 
